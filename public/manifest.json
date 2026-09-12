@@ -1,0 +1,17 @@
+{
+  "short_name": "HealthWise",
+  "name": "HealthWise AI — Public Health Awareness & Disease Education",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea58e",
+  "display": "standalone",
+  "orientation": "portrait",
+  "description": "An educational AI chatbot for public health awareness, disease information, and prevention guidance."
+}
