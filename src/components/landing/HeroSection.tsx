@@ -133,7 +133,7 @@ export const HeroSection: React.FC = () => {
                       onClick={() => navigate(`/chat?prompt=${encodeURIComponent(q)}`)}
                       className="text-left text-xs bg-slate-50 hover:bg-teal-50 hover:text-teal-700 text-slate-700 p-2 rounded-xl border border-slate-200/70 transition-all flex items-center justify-between group"
                     >
-                      <span className="truncate">{q}</span>
+                      <span className="truncate min-w-0 flex-1">{q}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all flex-shrink-0 ml-2" />
                     </button>
                   ))}

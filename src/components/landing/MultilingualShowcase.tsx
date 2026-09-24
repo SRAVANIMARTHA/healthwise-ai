@@ -74,7 +74,7 @@ export const MultilingualShowcase: React.FC = () => {
           <div className="lg:col-span-6">
             <div className="bg-slate-50 rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-sm">
               {/* Language Tabs */}
-              <div className="flex gap-2 mb-6 border-b border-slate-200 pb-3">
+              <div className="flex flex-wrap gap-2 mb-6 border-b border-slate-200 pb-3">
                 {(['en', 'te', 'hi'] as const).map((code) => (
                   <button
                     key={code}
