@@ -24,7 +24,7 @@ export const MainLayout: React.FC = () => {
       <Header />
 
       {/* Main Body with accessibility landmark */}
-      <main id="main-content" tabIndex={-1} className={`flex-1 outline-none ${isChatPage ? '' : 'pb-16 sm:pb-0'}`}>
+      <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
         <Outlet />
       </main>
 

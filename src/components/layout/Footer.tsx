@@ -7,7 +7,7 @@ export const Footer: React.FC = () => {
   const { t } = useTranslation();
 
   return (
-    <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 pt-12 pb-8">
+    <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 pt-12 pb-[calc(2rem+4.5rem+env(safe-area-inset-bottom))] sm:pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Emergency Alert Box in Footer */}
         <div className="bg-rose-950/60 border border-rose-800/60 rounded-2xl p-4 sm:p-5 mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

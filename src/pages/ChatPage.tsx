@@ -191,7 +191,7 @@ export const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem-2.5rem)] sm:h-[calc(100vh-5rem-2.5rem)] max-w-7xl mx-auto">
+    <div className="flex h-[calc(100vh-4rem-2.5rem-4.5rem-env(safe-area-inset-bottom))] sm:h-[calc(100vh-5rem-2.5rem)] max-w-7xl mx-auto">
       {/* Sidebar: Chat History */}
       <aside
         className={`${
