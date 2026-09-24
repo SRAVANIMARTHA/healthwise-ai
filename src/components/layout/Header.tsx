@@ -151,7 +151,7 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
             <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center text-white shadow-sm shadow-teal-500/20 group-hover:bg-teal-700 transition-colors">
               <Activity className="w-6 h-6" />
             </div>
@@ -165,14 +165,14 @@ export const Header: React.FC = () => {
           </Link>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+          <nav className="hidden lg:flex flex-1 items-center justify-center gap-1 xl:gap-2 overflow-x-auto no-scrollbar mx-2">
             {navLinks.map((link) => {
               const active = isActive(link.path);
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                     active
                       ? 'text-teal-700 bg-teal-50/80 font-semibold'
                       : 'text-slate-600 hover:text-teal-600 hover:bg-slate-50'
@@ -185,7 +185,7 @@ export const Header: React.FC = () => {
           </nav>
 
           {/* Right Actions (Language + User Profile / Login) */}
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-3 flex-shrink-0">
             {/* Language Picker */}
             <div className="relative" ref={langMenuRef}>
               <button
@@ -385,7 +385,7 @@ export const Header: React.FC = () => {
             ) : (
               <Link
                 to="/login"
-                className="text-xs font-medium text-slate-600 hover:text-teal-600 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors"
+                className="text-xs font-medium text-slate-600 hover:text-teal-600 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors whitespace-nowrap flex-shrink-0"
               >
                 {t('nav', 'signIn')}
               </Link>
