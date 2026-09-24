@@ -27,7 +27,7 @@ The platform provides a conversational AI assistant, an interactive disease expl
 The application is deployed on **Vercel**, connected to the `main` branch of this repository.
 
 > Deployment URL is configured via Vercel's project settings.  
-> Visit [github.com/SRAVANIMARTHA/healthwise-ai](https://github.com/SRAVANIMARTHA/healthwise-ai) for the latest deployment link.
+> Visit [github.com/SRAVANIMARTHA/healthwise-ai](https://healthwise-ai-chatbot.vercel.app/) for the latest deployment link.
 
 ---
 
