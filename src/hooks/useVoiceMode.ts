@@ -119,12 +119,45 @@ export function useVoiceMode({
         let currentInterim = '';
         let fullFinalTranscript = '';
 
+        // Helper to normalize strings for overlap detection (removing common punctuation)
+        const normalize = (s: string) => s.toLowerCase().replace(/[.,!?;:।]/g, '').replace(/\s+/g, ' ').trim();
+
         for (let i = 0; i < event.results.length; ++i) {
           const res = event.results[i];
+          const chunk = res[0].transcript.trim();
+          
+          if (!chunk) continue;
+
           if (res.isFinal) {
-            fullFinalTranscript += (fullFinalTranscript ? ' ' : '') + res[0].transcript.trim();
+            if (!fullFinalTranscript) {
+              fullFinalTranscript = chunk;
+            } else {
+              const sfNorm = normalize(fullFinalTranscript);
+              const chNorm = normalize(chunk);
+
+              if (chNorm.startsWith(sfNorm)) {
+                // Cumulative (Android Chrome bug): new chunk contains the entire previous transcript
+                fullFinalTranscript = chunk;
+              } else if (sfNorm.startsWith(chNorm)) {
+                // Edge case: new chunk is a substring of the old one
+              } else {
+                // Segmented (Desktop Chrome / Spec compliant): genuinely new segment
+                fullFinalTranscript += ' ' + chunk;
+              }
+            }
           } else {
-            currentInterim += res[0].transcript;
+            if (!currentInterim) {
+              currentInterim = chunk;
+            } else {
+              const ciNorm = normalize(currentInterim);
+              const chNorm = normalize(chunk);
+              
+              if (chNorm.startsWith(ciNorm)) {
+                currentInterim = chunk;
+              } else if (!ciNorm.startsWith(chNorm)) {
+                currentInterim += ' ' + chunk;
+              }
+            }
           }
         }
 
