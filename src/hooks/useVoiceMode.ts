@@ -46,6 +46,8 @@ export function useVoiceMode({
   const lastSpokenMessageIdRef = useRef<string | null>(null);
   const voiceStateRef = useRef<VoiceState>('idle');
   const manualStopRef = useRef(false);
+  const accumulatedTranscriptRef = useRef('');
+  const isMobileRef = useRef(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
 
   // Sync ref
   useEffect(() => {
@@ -102,25 +104,25 @@ export function useVoiceMode({
 
       recognition.onstart = () => {
         isListeningRef.current = true;
+        accumulatedTranscriptRef.current = '';
         setVoiceState('listening');
         setErrorMessage(null);
       };
 
       recognition.onresult = (event: any) => {
         // Interruption / Barge-in detection:
-        // If recognition gets speech while we were speaking or thinking, abort TTS immediately
         if (voiceStateRef.current === 'speaking') {
           stopSpeech();
           setVoiceState('interrupted');
         }
 
         let currentInterim = '';
-        let finalResult = '';
+        let fullFinalTranscript = '';
 
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
+        for (let i = 0; i < event.results.length; ++i) {
           const res = event.results[i];
           if (res.isFinal) {
-            finalResult += res[0].transcript;
+            fullFinalTranscript += (fullFinalTranscript ? ' ' : '') + res[0].transcript.trim();
           } else {
             currentInterim += res[0].transcript;
           }
@@ -130,21 +132,24 @@ export function useVoiceMode({
           setInterimTranscript(currentInterim);
         }
 
-        if (finalResult.trim()) {
-          const trimmedFinal = finalResult.trim();
+        if (fullFinalTranscript.trim()) {
+          const trimmedFinal = fullFinalTranscript.trim();
           setTranscript(trimmedFinal);
+          accumulatedTranscriptRef.current = trimmedFinal;
           setInterimTranscript('');
 
-          // Temporarily stop recognition while AI processes to prevent echo/feedback
-          stopRecognition();
-          setVoiceState('thinking');
+          // On desktop, we send immediately because desktop natively waits for silence before emitting isFinal.
+          // On mobile, Android emits isFinal per word/chunk, so we must NOT stop/send here. We wait for onend.
+          if (!isMobileRef.current) {
+            stopRecognition();
+            setVoiceState('thinking');
 
-          // Send to existing chat pipeline
-          onSendMessage(trimmedFinal).catch((err) => {
-            console.error('[VoiceMode] Failed to send message:', err);
-            setVoiceState('error');
-            setErrorMessage('Failed to get answer. Please try speaking again.');
-          });
+            onSendMessage(trimmedFinal).catch((err) => {
+              console.error('[VoiceMode] Failed to send message:', err);
+              setVoiceState('error');
+              setErrorMessage('Failed to get answer. Please try speaking again.');
+            });
+          }
         }
       };
 
@@ -185,6 +190,26 @@ export function useVoiceMode({
       };
 
       recognition.onend = () => {
+        // On mobile, the OS mic closes naturally when the user stops speaking.
+        // We use this event to definitively know the user is done, since we accumulated the chunks.
+        if (
+          isMobileRef.current &&
+          voiceStateRef.current === 'listening' &&
+          accumulatedTranscriptRef.current
+        ) {
+          const finalMessage = accumulatedTranscriptRef.current;
+          accumulatedTranscriptRef.current = '';
+          isListeningRef.current = false;
+          setVoiceState('thinking');
+
+          onSendMessage(finalMessage).catch((err) => {
+            console.error('[VoiceMode] Failed to send message:', err);
+            setVoiceState('error');
+            setErrorMessage('Failed to get answer. Please try speaking again.');
+          });
+          return;
+        }
+
         // If ended unexpectedly while we intended to keep listening, restart
         if (
           isListeningRef.current &&
