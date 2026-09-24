@@ -277,8 +277,8 @@ export const ChatPage: React.FC = () => {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0 px-2 sm:px-4 py-2 sm:py-3">
         {/* Chat Header */}
-        <div className="flex items-center justify-between bg-white border border-slate-200/80 rounded-2xl px-3 sm:px-4 py-2.5 shadow-sm mb-2 flex-shrink-0">
-          <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-white border border-slate-200/80 rounded-2xl px-3 sm:px-4 py-2.5 shadow-sm mb-2 flex-shrink-0">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
               className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 md:hidden"
@@ -295,7 +295,7 @@ export const ChatPage: React.FC = () => {
               <Bot className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <h2 className="font-bold text-sm text-slate-900 truncate">HealthWise AI</h2>
                 <Badge variant="success" size="sm">Evidence Grounded</Badge>
                 <Badge variant="neutral" size="sm" className="hidden sm:inline-flex items-center gap-1 font-mono text-[10px] text-slate-600">
@@ -311,7 +311,7 @@ export const ChatPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Button
               size="sm"
               variant="outline"
@@ -569,7 +569,7 @@ export const ChatPage: React.FC = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={t('chat', 'placeholder')}
-              className="flex-1 text-sm bg-transparent border-none focus:outline-none px-2 text-slate-800 placeholder:text-slate-400"
+              className="flex-1 min-w-0 text-sm bg-transparent border-none focus:outline-none px-2 text-slate-800 placeholder:text-slate-400"
               disabled={isTyping}
             />
             <button
