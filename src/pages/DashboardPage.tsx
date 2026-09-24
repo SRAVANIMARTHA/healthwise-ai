@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MessageSquare, Bookmark, History, Settings, Globe, ShieldCheck, ArrowRight, Activity, Plus, User } from 'lucide-react';
+import { MessageSquare, Bookmark, History, Settings, Globe, ShieldCheck, ArrowRight, Activity, Plus, User, FileText } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Badge } from '../components/common/Badge';
@@ -76,7 +76,16 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Quick Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card hoverable onClick={() => navigate('/report')} className="border-teal-200 bg-teal-50/20">
+          <div className="flex items-center justify-between mb-3">
+            <FileText className="w-6 h-6 text-teal-700" />
+            <ArrowRight className="w-4 h-4 text-teal-600" />
+          </div>
+          <h3 className="font-bold text-slate-900 text-base mb-1">Explain Report</h3>
+          <p className="text-xs text-slate-600">Upload laboratory PDF or image for plain-language findings analysis.</p>
+        </Card>
+
         <Card hoverable onClick={() => navigate('/chat-history')}>
           <div className="flex items-center justify-between mb-3">
             <History className="w-6 h-6 text-teal-600" />

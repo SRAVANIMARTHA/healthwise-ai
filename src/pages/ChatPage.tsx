@@ -18,14 +18,19 @@ import {
   Menu,
   Sparkles,
   PhoneCall,
+  Mic,
+  FileText,
 } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
 import { EmergencyBanner } from '../components/common/EmergencyBanner';
 import { HotlineModal } from '../components/common/HotlineModal';
+import { AIAvatar } from '../components/chat/AIAvatar';
+import { VoiceModeModal } from '../components/chat/VoiceModeModal';
 import { useChat } from '../hooks/useChat';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../hooks/useTranslation';
+import { useVoiceMode } from '../hooks/useVoiceMode';
 import { puterAIService } from '../services/ai/puter-ai-service';
 import { feedbackService } from '../services/admin/feedback-service';
 import { securitySanitizer } from '../services/security/sanitizer';
@@ -45,6 +50,7 @@ export const ChatPage: React.FC = () => {
     activeSessionId,
     messages,
     isTyping,
+    isSearching,
     isLoadingSessions,
     isLoadingMessages,
     error,
@@ -62,6 +68,25 @@ export const ChatPage: React.FC = () => {
   const [dismissedEmergency, setDismissedEmergency] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const processedPromptRef = useRef<string | null>(null);
+
+  // Phase 17: Voice Mode integration
+  const {
+    isOpen: isVoiceModalOpen,
+    voiceState,
+    transcript,
+    interimTranscript,
+    spokenResponse,
+    errorMessage: voiceErrorMessage,
+    openVoiceMode,
+    closeVoiceMode,
+    startListening,
+    handleInterrupt,
+  } = useVoiceMode({
+    onSendMessage: send,
+    isTyping,
+    isSearching,
+    messages,
+  });
 
   const hasEmergencyAlert = messages.some(
     (m) => m.isEmergencyAlert || m.urgency_level === 'critical'
@@ -290,6 +315,24 @@ export const ChatPage: React.FC = () => {
             <Button
               size="sm"
               variant="outline"
+              onClick={() => navigate('/report')}
+              className="text-teal-700 hover:text-teal-800 hover:bg-teal-50 border-teal-200"
+              leftIcon={<FileText className="w-3.5 h-3.5" />}
+            >
+              <span className="hidden sm:inline">Explain Report</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={openVoiceMode}
+              className="text-teal-700 hover:text-teal-800 hover:bg-teal-50 border-teal-200"
+              leftIcon={<Mic className="w-3.5 h-3.5" />}
+            >
+              <span className="hidden sm:inline">Voice Mode</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => setIsHotlinesOpen(true)}
               className="text-rose-700 hover:text-rose-800 hover:bg-rose-50 border-rose-200"
               leftIcon={<PhoneCall className="w-3.5 h-3.5" />}
@@ -320,16 +363,19 @@ export const ChatPage: React.FC = () => {
               </div>
             </div>
           ) : messages.length === 0 && !activeSessionId ? (
-            /* Empty state — no active session */
+            /* Empty state — greeting card */
             <div className="flex items-center justify-center h-full">
               <div className="text-center space-y-4 max-w-md px-4">
-                <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto border border-teal-200">
-                  <Bot className="w-7 h-7" />
+                <AIAvatar size="lg" className="mx-auto" />
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">{t('chat', 'startTitle')}</h3>
+                  <p className="text-sm text-teal-700 font-medium mt-1">
+                    Hi! I'm <strong>HealthWise AI</strong> 👋
+                  </p>
+                  <p className="text-xs text-slate-500 leading-relaxed mt-2">
+                    {t('chat', 'startDesc')}
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">{t('chat', 'startTitle')}</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  {t('chat', 'startDesc')}
-                </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
                   {samplePrompts.slice(0, 4).map((p, idx) => (
@@ -355,9 +401,7 @@ export const ChatPage: React.FC = () => {
                   }`}
                 >
                   {msg.sender === 'assistant' && (
-                    <div className="w-7 h-7 rounded-xl bg-teal-600 text-white flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
-                      <Bot className="w-3.5 h-3.5" />
-                    </div>
+                    <AIAvatar isThinking={isTyping && msg === messages[messages.length - 1]} />
                   )}
 
                   <div
@@ -464,19 +508,19 @@ export const ChatPage: React.FC = () => {
                 </div>
               ))}
 
-              {/* Typing indicator */}
-              {isTyping && (
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-sm">
-                    <Bot className="w-3.5 h-3.5" />
-                  </div>
+              {/* Two-phase loading indicator: Phase 1 = searching knowledge base, Phase 2 = composing response */}
+              {(isSearching || isTyping) && (
+                <div className="flex items-center gap-2.5" role="status" aria-live="polite">
+                  <AIAvatar isThinking={isTyping} />
                   <div className="bg-white border border-slate-200 rounded-2xl px-4 py-3 shadow-sm flex items-center gap-2">
-                    <div className="flex gap-1">
+                    <div className="flex gap-1" aria-hidden="true">
                       <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-bounce" style={{ animationDelay: '0ms' }}></span>
                       <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-bounce" style={{ animationDelay: '150ms' }}></span>
                       <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-bounce" style={{ animationDelay: '300ms' }}></span>
                     </div>
-                    <span className="text-xs text-slate-500">{t('chat', 'analyzing')}</span>
+                    <span className="text-xs text-slate-500">
+                      {isSearching ? 'Searching health knowledge base…' : t('chat', 'analyzing')}
+                    </span>
                   </div>
                 </div>
               )}
@@ -528,6 +572,15 @@ export const ChatPage: React.FC = () => {
               className="flex-1 text-sm bg-transparent border-none focus:outline-none px-2 text-slate-800 placeholder:text-slate-400"
               disabled={isTyping}
             />
+            <button
+              type="button"
+              onClick={openVoiceMode}
+              title="Voice Mode"
+              aria-label="Start Voice Mode"
+              className="p-2 text-slate-500 hover:text-teal-700 hover:bg-teal-50 rounded-xl transition-colors"
+            >
+              <Mic className="w-4 h-4" />
+            </button>
             <Button
               type="submit"
               size="sm"
@@ -545,6 +598,20 @@ export const ChatPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Phase 17: Voice Mode Modal */}
+      <VoiceModeModal
+        isOpen={isVoiceModalOpen}
+        voiceState={voiceState}
+        transcript={transcript}
+        interimTranscript={interimTranscript}
+        spokenResponse={spokenResponse}
+        errorMessage={voiceErrorMessage}
+        onClose={closeVoiceMode}
+        onInterrupt={handleInterrupt}
+        onStartListening={startListening}
+        hasEmergencyAlert={hasEmergencyAlert}
+      />
 
       {/* Global Emergency Hotlines Directory Modal */}
       <HotlineModal

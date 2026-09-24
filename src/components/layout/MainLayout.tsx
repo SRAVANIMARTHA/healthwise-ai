@@ -5,6 +5,7 @@ import { Footer } from './Footer';
 import { MobileNav } from './MobileNav';
 import { DisclaimerBanner } from '../common/DisclaimerBanner';
 import { SkipLink } from '../common/SkipLink';
+import { FloatingHealthWiseAI } from '../chat/FloatingHealthWiseAI';
 
 export const MainLayout: React.FC = () => {
   const location = useLocation();
@@ -29,6 +30,9 @@ export const MainLayout: React.FC = () => {
 
       {/* Footer (omitted on chat page for app-like chat height) */}
       {!isChatPage && <Footer />}
+
+      {/* Global Floating HealthWise AI Assistant */}
+      <FloatingHealthWiseAI />
 
       {/* Bottom bar for mobile phones */}
       <MobileNav />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Activity,
@@ -30,6 +30,88 @@ export const Header: React.FC = () => {
   const { user, isAuthenticated, isAdmin, signOut } = useAuth();
   const { language, t, setLanguage, languages } = useTranslation();
 
+  // Refs for dropdown containers and trigger buttons (outside-click & focus restoration)
+  const langMenuRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const langBtnRef = useRef<HTMLButtonElement>(null);
+  const userBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Close all dropdowns and reset search input
+  const closeAllDropdowns = useCallback(() => {
+    setLangMenuOpen(false);
+    setUserMenuOpen(false);
+    setLangSearch('');
+  }, []);
+
+  // Close dropdowns on route change
+  useEffect(() => {
+    closeAllDropdowns();
+    setMobileMenuOpen(false);
+  }, [location.pathname, location.search, closeAllDropdowns]);
+
+  // Outside-click handler — uses pointerdown so it covers both mouse and touch
+  useEffect(() => {
+    if (!langMenuOpen && !userMenuOpen) return;
+
+    const handlePointerDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (langMenuOpen && langMenuRef.current && !langMenuRef.current.contains(target)) {
+        setLangMenuOpen(false);
+        setLangSearch('');
+      }
+      if (userMenuOpen && userMenuRef.current && !userMenuRef.current.contains(target)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown, { capture: true });
+    return () => document.removeEventListener('pointerdown', handlePointerDown, { capture: true });
+  }, [langMenuOpen, userMenuOpen]);
+
+  // Escape key handler — close open dropdown or mobile drawer and restore focus to the trigger button
+  useEffect(() => {
+    if (!langMenuOpen && !userMenuOpen && !mobileMenuOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (langMenuOpen) {
+        setLangMenuOpen(false);
+        setLangSearch('');
+        langBtnRef.current?.focus();
+      } else if (userMenuOpen) {
+        setUserMenuOpen(false);
+        userBtnRef.current?.focus();
+      } else if (mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [langMenuOpen, userMenuOpen, mobileMenuOpen]);
+
+  // Mutual-exclusivity openers — opening one dropdown always closes the other and mobile menu
+  const openLangMenu = useCallback(() => {
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
+    setLangMenuOpen(prev => !prev);
+    setLangSearch('');
+  }, []);
+
+  const openUserMenu = useCallback(() => {
+    setLangMenuOpen(false);
+    setMobileMenuOpen(false);
+    setLangSearch('');
+    setUserMenuOpen(prev => !prev);
+  }, []);
+
+  const toggleMobileMenu = useCallback(() => {
+    setLangMenuOpen(false);
+    setUserMenuOpen(false);
+    setLangSearch('');
+    setMobileMenuOpen(prev => !prev);
+  }, []);
+
   const currentLang = languages.find((l) => l.code === language) || languages[0];
 
   const filteredLanguages = languages.filter((l) =>
@@ -47,6 +129,7 @@ export const Header: React.FC = () => {
     { name: t('nav', 'prevention'), path: '/prevention' },
     { name: t('nav', 'vaccination'), path: '/vaccination' },
     { name: t('nav', 'healthyHabits'), path: '/healthy-habits' },
+    { name: t('nav', 'explainReport'), path: '/report' },
     { name: t('nav', 'resources'), path: '/resources' },
     { name: t('nav', 'about'), path: '/about' },
   ];
@@ -104,15 +187,13 @@ export const Header: React.FC = () => {
           {/* Right Actions (Language + User Profile / Login) */}
           <div className="hidden sm:flex items-center gap-3">
             {/* Language Picker */}
-            <div className="relative">
+            <div className="relative" ref={langMenuRef}>
               <button
-                onClick={() => {
-                  setLangMenuOpen(!langMenuOpen);
-                  setLangSearch('');
-                }}
+                ref={langBtnRef}
+                onClick={openLangMenu}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs font-medium text-slate-700 transition-colors"
                 aria-label={t('nav', 'selectLanguage')}
-                aria-haspopup="true"
+                aria-haspopup="listbox"
                 aria-expanded={langMenuOpen}
               >
                 <Globe className="w-3.5 h-3.5 text-slate-500" />
@@ -218,12 +299,13 @@ export const Header: React.FC = () => {
 
             {/* Authenticated User Menu or Sign In */}
             {isAuthenticated && user ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  ref={userBtnRef}
+                  onClick={openUserMenu}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-teal-300 hover:bg-slate-50 transition-all text-xs font-semibold text-slate-800"
                   aria-label="User account menu"
-                  aria-haspopup="true"
+                  aria-haspopup="menu"
                   aria-expanded={userMenuOpen}
                 >
                   <div className="w-6 h-6 rounded-lg bg-teal-600 text-white flex items-center justify-center text-xs font-bold">
@@ -239,7 +321,7 @@ export const Header: React.FC = () => {
                 </button>
 
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-1.5 w-48 bg-white rounded-xl shadow-lg border border-slate-200/80 py-1.5 z-50 animate-in fade-in zoom-in-95 text-xs">
+                  <div className="absolute right-0 mt-1.5 w-48 bg-white rounded-xl shadow-lg border border-slate-200/80 py-1.5 z-50 animate-in fade-in zoom-in-95 text-xs" role="menu">
                     <div className="px-3 py-2 border-b border-slate-100">
                       <p className="font-bold text-slate-900 truncate">{user.fullName || 'User'}</p>
                       <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
@@ -249,6 +331,7 @@ export const Header: React.FC = () => {
                       to="/dashboard"
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
+                      role="menuitem"
                     >
                       <LayoutDashboard className="w-3.5 h-3.5 text-slate-500" />
                       <span>{t('nav', 'dashboard')}</span>
@@ -258,6 +341,7 @@ export const Header: React.FC = () => {
                       to="/bookmarks"
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
+                      role="menuitem"
                     >
                       <Bookmark className="w-3.5 h-3.5 text-slate-500" />
                       <span>{t('nav', 'bookmarks')}</span>
@@ -268,6 +352,7 @@ export const Header: React.FC = () => {
                         to="/admin"
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-2 px-3 py-2 text-purple-700 hover:bg-purple-50 font-semibold transition-colors"
+                        role="menuitem"
                       >
                         <ShieldAlert className="w-3.5 h-3.5" />
                         <span>{t('nav', 'admin')}</span>
@@ -278,6 +363,7 @@ export const Header: React.FC = () => {
                       to="/profile"
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2 px-3 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
+                      role="menuitem"
                     >
                       <User className="w-3.5 h-3.5 text-slate-500" />
                       <span>{t('nav', 'profile')}</span>
@@ -287,6 +373,7 @@ export const Header: React.FC = () => {
                       <button
                         onClick={handleSignOut}
                         className="w-full text-left flex items-center gap-2 px-3 py-2 text-rose-600 hover:bg-rose-50 transition-colors"
+                        role="menuitem"
                       >
                         <LogOut className="w-3.5 h-3.5" />
                         <span>{t('nav', 'signOut')}</span>
@@ -303,15 +390,6 @@ export const Header: React.FC = () => {
                 {t('nav', 'signIn')}
               </Link>
             )}
-
-            {/* Start Health Chat CTA */}
-            <Button
-              size="sm"
-              onClick={() => navigate('/chat')}
-              leftIcon={<MessageSquare className="w-3.5 h-3.5" />}
-            >
-              {t('chat', 'title')}
-            </Button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -326,7 +404,7 @@ export const Header: React.FC = () => {
               <MessageSquare className="w-4 h-4 text-teal-600" />
             </Button>
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={toggleMobileMenu}
               className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
               aria-label="Toggle navigation menu"
               aria-expanded={mobileMenuOpen}

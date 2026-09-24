@@ -19,6 +19,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
+const ReportExplainerPage = lazy(() => import('./pages/ReportExplainerPage').then(m => ({ default: m.ReportExplainerPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 // User Dashboard Pages (Protected)
@@ -62,6 +63,7 @@ export function App() {
           <Route path="vaccination" element={<VaccinationPage />} />
           <Route path="healthy-habits" element={<HealthyHabitsPage />} />
           <Route path="resources" element={<ResourcesPage />} />
+          <Route path="report" element={<ReportExplainerPage />} />
           <Route path="about" element={<AboutPage />} />
 
           {/* User Portal (Protected via Supabase Auth) */}

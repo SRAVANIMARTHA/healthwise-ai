@@ -124,7 +124,11 @@ async function runPhase11Verification() {
   const headerPath = path.resolve(process.cwd(), 'src/components/layout/Header.tsx');
   const headerContent = fs.readFileSync(headerPath, 'utf8');
   assert(headerContent.includes('aria-expanded={langMenuOpen}'), 'Language picker button has dynamic aria-expanded');
-  assert(headerContent.includes('aria-haspopup="true"'), 'Language picker button has aria-haspopup="true"');
+  // Phase 13 upgraded aria-haspopup from generic "true" to semantic "listbox" — both are valid ARIA values
+  assert(
+    headerContent.includes('aria-haspopup="listbox"') || headerContent.includes('aria-haspopup="true"'),
+    'Language picker button has aria-haspopup="true"'
+  );
   assert(headerContent.includes('aria-expanded={userMenuOpen}'), 'User menu button has dynamic aria-expanded');
   assert(headerContent.includes('aria-expanded={mobileMenuOpen}'), 'Mobile nav toggle button has dynamic aria-expanded');
   assert(headerContent.includes('aria-controls="mobile-navigation-drawer"'), 'Mobile nav button controls mobile-navigation-drawer');

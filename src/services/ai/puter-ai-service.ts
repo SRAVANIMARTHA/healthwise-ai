@@ -64,9 +64,48 @@ STRICT RULES — NEVER violate these:
 6. Focus ONLY on general health education: disease awareness, prevention, vaccination facts, hygiene, and nutrition.
 7. If a user describes symptoms that sound life-threatening (chest pain, stroke, breathing difficulty, heavy bleeding, seizures, loss of consciousness, suicidal thoughts), respond IMMEDIATELY with emergency service numbers (112/911/108) and a directive to call for help. Do NOT try to diagnose or calm them — escalate urgency.
 8. At the end of EVERY substantive health response, include the disclaimer: "⚕️ This is general educational health information. For personal medical advice, consult a licensed healthcare professional."
-9. Keep responses structured with headings (##) and bullet points for readability.
-10. When discussing diseases, cover: what it is, common symptoms, prevention/risk reduction, and when to seek medical care.
-11. Be empathetic, clear, and concise. Avoid unnecessary medical jargon.`;
+9. When discussing diseases, cover: what it is, common symptoms, prevention/risk reduction, and when to seek medical care.
+10. Be empathetic, clear, and concise. Avoid unnecessary medical jargon.
+
+RESPONSE QUALITY, SUMMARIZATION & HUMAN LANGUAGE:
+- SYNTHESIZE RAG EVIDENCE: Treat retrieved passages as underlying medical evidence, NOT as pre-written responses. Never paste large blocks or full paragraphs verbatim from fact sheets. Rephrase and explain in conversational, human-friendly terms.
+- DIRECT ANSWER FIRST: Answer the user's specific question in the opening sentence. Never start with greetings or filler ("Great question!", "Thank you for asking about...").
+- HUMAN LANGUAGE: Use everyday terms (e.g. "high blood pressure" with "hypertension" explained simply). Briefly clarify medical terms if they must be used.
+- ADAPT TO USER INTENT:
+  * "What is X?" -> Concise definition + primary transmission/nature.
+  * "What are the symptoms?" -> Focus directly on symptoms and key warning signs.
+  * "How to prevent?" -> Concrete prevention measures and vector/hygiene controls.
+  * "Is it dangerous?" -> Risk factors and warning signs needing urgent medical evaluation.
+  * Yes/No questions (e.g. "Can dengue spread person-to-person?") -> Give a direct "No" or "Yes" immediately, followed by a 1-2 sentence explanation.
+  * Comparison questions (e.g. "Dengue vs Malaria") -> Compare the key medical differences concisely (causes, vectors, distinct symptoms).
+- TARGET LENGTH:
+  * Standard questions: Aim for 80–180 words total (including disclaimer).
+  * Yes/No or simple questions: Even shorter (40–100 words).
+  * Multi-part questions or explicit requests ("explain in detail", "tell me everything"): 200–300 words.
+  * Emergency escalation responses are exempt from length limits — always escalate fully and clearly.
+  * Never truncate or omit life-saving warnings or emergency advice for the sake of brevity.
+- STRUCTURE: Use short paragraphs and 3–5 bullet points where listing aids clarity. Use headings (##) only when dividing distinct topics.
+- CITATIONS: Always cite the actual official WHO document referenced in the evidence prompt (e.g. "WHO Dengue and Severe Dengue Fact Sheet"). Never fabricate URLs.`;
+
+// ---------- Follow-up Directive Builder ----------
+
+/**
+ * Returns an additional system instruction when the conversation has prior context,
+ * directing the AI to not repeat information already covered.
+ */
+function buildFollowUpDirective(
+  conversationHistory: Array<{ role: string; content: string }>
+): string | null {
+  const userTurns = conversationHistory.filter(m => m.role === 'user');
+  if (userTurns.length < 2) return null;
+
+  // Extract the topic of the previous user turn to give the AI a hint
+  const prevQuestion = userTurns[userTurns.length - 2]?.content?.slice(0, 120) || '';
+  return `FOLLOW-UP CONTEXT: The user previously asked: "${prevQuestion}". The user is now asking a follow-up question. Do NOT repeat the general overview or facts already provided. Answer ONLY the specific new question directly and concisely.`;
+}
+
+
+
 
 // ---------- Emergency Detection (runs BEFORE AI call & retrieval) ----------
 
@@ -244,6 +283,12 @@ export const puterAIService = {
       { role: 'system', content: ragContext.evidencePrompt },
     ];
 
+    // Inject follow-up directive when the conversation has prior context (avoids repetition)
+    const followUpDirective = buildFollowUpDirective(conversationHistory);
+    if (followUpDirective) {
+      messages.push({ role: 'system', content: followUpDirective });
+    }
+
     // Include last 8 messages of conversation context
     const recentHistory = conversationHistory.slice(-8);
     messages.push(...recentHistory);
@@ -321,21 +366,22 @@ export const puterAIService = {
     if (ragContext?.isGrounded && ragContext.sources.length > 0) {
       const topicName = ragContext.matchedTopics[0] || 'Health Information';
       const capitalizedTopic = topicName.charAt(0).toUpperCase() + topicName.slice(1);
+      const cleanSummary = extractKeyBulletPoints(ragContext.evidencePrompt);
 
       if (isTelugu) {
-        rawContent = `## ${capitalizedTopic} — WHO ఆరోగ్య మార్గదర్శకాలు\n\nఅధికారిక **ప్రపంచ ఆరోగ్య సంస్థ (WHO)** నివేదికల ఆధారంగా:\n\n### ముఖ్యమైన సమాచారం:\n${extractKeyBulletPoints(ragContext.evidencePrompt)}\n\n### ఆరోగ్య సూచనలు:\n- లక్షణాలను నిరంతరం గమనించండి మరియు పరిస్థితి మారితే వైద్యుడిని సంప్రదించండి.\n- అధికారిక నివారణ చర్యలను పాటించండి: పరిశుభ్రత, తగినంత విశ్రాంతి మరియు సమతుల్య ఆహారం.\n- తీవ్రమైన హెచ్చరిక సంకేతాలు కనిపిస్తే వెంటనే ఆసుపత్రి అత్యవసర విభాగానికి వెళ్ళండి.`;
+        rawContent = `${capitalizedTopic} గురించి ప్రాథమిక ఆరోగ్య సమాచారం:\n\n${cleanSummary}\n\n**ముఖ్య సలహాలు:**\n- లక్షణాలను నిశితంగా గమనించండి మరియు పరిస్థితి తీవ్రమైతే వైద్యుడిని సంప్రదించండి.\n- సరైన పరిశుభ్రత, తగినంత నీరు త్రాగడం మరియు విశ్రాంతి తీసుకోవడం ముఖ్యం.`;
       } else if (isHindi) {
-        rawContent = `## ${capitalizedTopic} — WHO स्वास्थ्य दिशानिर्देश\n\nआधिकारिक **विश्व स्वास्थ्य संगठन (WHO)** दस्तावेज़ों के आधार पर:\n\n### मुख्य जानकारी:\n${extractKeyBulletPoints(ragContext.evidencePrompt)}\n\n### स्वास्थ्य सिफारिशें:\n- लक्षणों की निरंतर निगरानी करें और स्थिति बिगड़ने पर डॉक्टर से सलाह लें।\n- आधिकारिक रोकथाम प्रोटोकॉल का पालन करें: पर्याप्त स्वच्छता, संतुलित पोषण और आराम।\n- गंभीर चेतावनी संकेत दिखने पर तुरंत आपातकालीन चिकित्सा सहायता लें।`;
+        rawContent = `${capitalizedTopic} के बारे में मुख्य स्वास्थ्य जानकारी:\n\n${cleanSummary}\n\n**मुख्य सिफारिशें:**\n- लक्षणों पर नजर रखें और स्थिति बिगड़ने पर डॉक्टर से सलाह लें।\n- पर्याप्त स्वच्छता, तरल पदार्थों का सेवन और आराम सुनिश्चित करें।`;
       } else {
-        rawContent = `## ${capitalizedTopic} — WHO Health Guidance\n\nBased on official **World Health Organization (WHO)** public health documentation:\n\n### Key Information:\n${extractKeyBulletPoints(ragContext.evidencePrompt)}\n\n### Health Recommendations:\n- Maintain vigilance regarding symptoms and consult a healthcare provider for any progressive changes.\n- Follow official prevention protocols: adequate hydration, hygiene, vector control, or balanced nutrition as appropriate.\n- Seek **immediate medical attention** if warning signs appear.`;
+        rawContent = `Here is essential health information regarding **${capitalizedTopic}** based on WHO documentation:\n\n${cleanSummary}\n\n**Key Actions:**\n- Monitor symptoms closely and seek medical care if warning signs appear.\n- Maintain supportive care including proper hydration, hygiene, and rest.`;
       }
     } else {
       if (isTelugu) {
-        rawContent = `## ఆరోగ్య సమాచారం\n\n**"${userQuery}"** గురించి అడిగినందుకు ధన్యవాదాలు.\n\n*గమనిక: మీ ప్రశ్నకు సరిగ్గా సరిపోయే WHO అధికారిక పత్రం స్థానిక డేటాబేస్‌లో ప్రస్తుతం అందుబాటులో లేదు.*\n\n### సాధారణ ప్రజారోగ్య సూత్రాలు:\n1. **వైద్యుడిని సంప్రదించండి**: లక్షణాలు కొనసాగితే లైసెన్స్ పొందిన వైద్యుడిని సంప్రదించండి.\n2. **నివారణే ముఖ్యం**: సరైన చేతుల పరిశుభ్రత, సమతుల్య ఆహారం మరియు సకాలంలో టీకాలు వేయించుకోవడం ద్వారా చాలా వ్యాధులను నివారించవచ్చు.\n3. **విశ్వసనీయ సమాచారం**: సమగ్ర ఆరోగ్య వివరాల కోసం [ప్రపంచ ఆరోగ్య సంస్థ (WHO)](https://www.who.int) ను సందర్శించండి.`;
+        rawContent = `ప్రస్తుతానికి మా జ్ఞానకోశంలో **"${userQuery}"** పై ప్రత్యేక అధికారిక WHO సమాచారం అందుబాటులో లేదు.\n\nలక్షణాలు కొనసాగితే లేదా ఆందోళన కలిగిస్తే, దయచేసి లైసెన్స్ పొందిన వైద్యుడిని సంప్రదించండి లేదా ధృవీకరించబడిన సమాచారం కోసం [WHO](https://www.who.int) ను సందర్శించండి.`;
       } else if (isHindi) {
-        rawContent = `## स्वास्थ्य जानकारी\n\n**"${userQuery}"** के बारे में पूछने के लिए धन्यवाद।\n\n*नोट: सत्यापित स्थानीय ज्ञानकोष में आपके प्रश्न से मेल खाने वाला आधिकारिक WHO तथ्य-पत्रक वर्तमान में उपलब्ध नहीं है।*\n\n### सामान्य सार्वजनिक स्वास्थ्य सिद्धांत:\n1. **डॉक्टर से परामर्श लें**: यदि आप लगातार लक्षणों का अनुभव कर रहे हैं, तो चिकित्सक से परामर्श लें।\n2. **रोकथाम प्राथमिकता**: उचित स्वच्छता, संतुलित पोषण और समय पर टीकाकरण से अधिकांश बीमारियों से बचा जा सकता है।\n3. **विश्वसनीय स्रोत**: आधिकारिक जानकारी के लिए [विश्व स्वास्थ्य संगठन (WHO)](https://www.who.int) पर जाएं।`;
+        rawContent = `वर्तमान सत्यापित ज्ञानकोष में **"${userQuery}"** के लिए विशिष्ट आधिकारिक WHO दस्तावेज़ उपलब्ध नहीं है।\n\nयदि आप लगातार लक्षणों का अनुभव कर रहे हैं, तो कृपया लाइसेंस प्राप्त चिकित्सक से परामर्श लें या आधिकारिक जानकारी के लिए [WHO](https://www.who.int) पर जाएं।`;
       } else {
-        rawContent = `## Health Information\n\nThank you for asking about **"${userQuery}"**.\n\n*Note: The verified local knowledge base does not currently contain a specific official WHO fact sheet directly matching your query.*\n\n### General Public Health Principles:\n1. **Consult a Doctor**: If you are experiencing concerning or persistent symptoms, please schedule an evaluation with a licensed physician.\n2. **Prevention First**: Most common illnesses can be substantially prevented through proper hand hygiene, regular exercise, balanced nutrition, and timely vaccination.\n3. **Trusted Sources**: For comprehensive documentation, visit the [World Health Organization](https://www.who.int) or your national health ministry.`;
+        rawContent = `I don't have enough trusted information in my current knowledge base to answer **"${userQuery}"** confidently.\n\nFor personal medical concerns, please consult a qualified healthcare professional or refer to official resources at the [World Health Organization](https://www.who.int).`;
       }
     }
 
@@ -357,13 +403,24 @@ export const puterAIService = {
 function extractKeyBulletPoints(evidencePrompt: string): string {
   const contentMatches = evidencePrompt.match(/Content:\s*([\s\S]*?)(?=--- EVIDENCE PASSAGE|\[CRITICAL INSTRUCTIONS|$)/g);
   if (!contentMatches || contentMatches.length === 0) {
-    return '- Grounded information retrieved from verified World Health Organization documentation.';
+    return '- Evidence retrieved from verified World Health Organization documentation.';
   }
 
-  const snippet = contentMatches
-    .map(c => c.replace(/Content:\s*/i, '').trim())
-    .slice(0, 2)
-    .join('\n\n');
+  // Extract clean text lines and filter out empty lines or raw header artifacts
+  const cleanSentences: string[] = [];
+  for (const match of contentMatches) {
+    const raw = match.replace(/Content:\s*/i, '').trim();
+    const sentences = raw.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 15 && !s.includes('http'));
+    for (const s of sentences) {
+      if (cleanSentences.length < 3) {
+        cleanSentences.push(s.trim());
+      }
+    }
+  }
 
-  return snippet.slice(0, 750) + (snippet.length > 750 ? '...' : '');
+  if (cleanSentences.length === 0) {
+    return '- Grounded in official World Health Organization health guidance.';
+  }
+
+  return cleanSentences.map(s => `- ${s}`).join('\n');
 }

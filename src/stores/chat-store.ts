@@ -9,6 +9,7 @@ interface ChatStoreState {
   activeSessionId: string | null;
   messages: ChatMessage[];
   isTyping: boolean;
+  isSearching: boolean;  // Phase 15: RAG retrieval phase indicator
   isLoadingSessions: boolean;
   isLoadingMessages: boolean;
   error: string | null;
@@ -31,6 +32,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
   activeSessionId: null,
   messages: [],
   isTyping: false,
+  isSearching: false,
   isLoadingSessions: false,
   isLoadingMessages: false,
   error: null,
@@ -146,8 +148,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       }));
     }
 
-    // 3. Generate response using Puter.js AI (with system prompt, emergency detection, & graceful fallback)
-    set({ isTyping: true });
+    // 3. Phase 15: Phase 1 — show "Searching knowledge base" indicator
+    set({ isSearching: true, isTyping: false });
 
     const conversationHistory = messages
       .filter((m) => m.sender === 'user' || m.sender === 'assistant')
@@ -155,6 +157,10 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
         role: m.sender === 'user' ? 'user' : 'assistant',
         content: m.content,
       }));
+
+    // 4. Phase 15: Phase 2 — transition to "Composing response" indicator before AI call
+    // RAG retrieval is embedded inside generateResponse; switch state just before calling it
+    set({ isSearching: false, isTyping: true });
 
     const aiResult = await puterAIService.generateResponse(content, conversationHistory);
 
@@ -174,6 +180,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       set((state) => ({
         messages: [...state.messages, assistantMsg],
         isTyping: false,
+        isSearching: false,
       }));
 
       // Log privacy-safe query answered event for Admin Analytics (No PII)
@@ -193,7 +200,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
         // Analytics must never disrupt chat flow
       }
     } else {
-      set({ isTyping: false, error: 'Failed to save AI response.' });
+      set({ isTyping: false, isSearching: false, error: 'Failed to save AI response.' });
     }
   },
 

@@ -22,6 +22,7 @@ export interface TranslationDictionary {
     dashboard: string;
     profile: string;
     admin: string;
+    explainReport: string;
     signIn: string;
     signOut: string;
     selectLanguage: string;
@@ -231,6 +232,17 @@ export interface TranslationDictionary {
     multiPointHi: string;
     multiTryChat: string;
 
+    // Demo AI Response List Items
+    demoAiResponseList1: string;
+    demoAiResponseList2: string;
+    demoAiResponseList3: string;
+    demoAiResponseList4: string;
+
+    // Quick Question Suggestions
+    quickQuestion2: string;
+    quickQuestion3: string;
+    quickQuestion4: string;
+
     // FAQ Section
     faqBadge: string;
     faqTitle: string;
@@ -319,6 +331,93 @@ export interface TranslationDictionary {
     schemaMigrationsReady: string;
     engineActive: string;
   };
+  report: {
+    back: string;
+    badge: string;
+    title: string;
+    subtitle: string;
+    readingReport: string;
+    analyzingFindings: string;
+    generatingExplanation: string;
+    errorTitle: string;
+    tryAnother: string;
+    scannedError: string;
+    noTestsError: string;
+    disclaimerText: string;
+    uploadTitle: string;
+    uploadSubtitle: string;
+    browseFiles: string;
+    comparingNotice: string;
+    pdfBadge: string;
+    imgBadge: string;
+    maxSizeBadge: string;
+    privacyNotice: string;
+    privacyDesc: string;
+    analysisComplete: string;
+    sessionReview: string;
+    uploadAnother: string;
+    executiveSummaryTitle: string;
+    testsReviewed: string;
+    withinRange: string;
+    outsideRange: string;
+    patternsNoted: string;
+    patternsTitle: string;
+    patternsSubtitle: string;
+    markersCount: string;
+    significance: string;
+    reviewedFindingsTitle: string;
+    reviewedFindingsSubtitle: string;
+    filterAll: string;
+    filterOutside: string;
+    filterWithin: string;
+    reportReferenceRange: string;
+    whatItMeasures: string;
+    clinicalContext: string;
+    askFollowUpPrompt: string;
+    doctorQuestionsTitle: string;
+    doctorQuestionsSubtitle: string;
+    askDoctorQuestionBtn: string;
+    findNearbyBtn: string;
+    hideNearbyBtn: string;
+    belowRangeBadge: string;
+    aboveRangeBadge: string;
+    withinRangeBadge: string;
+    reviewedBadge: string;
+    attentionPrompt: string;
+    attentionDiscuss: string;
+    attentionInfo: string;
+    locatorBadge: string;
+    locatorTitle: string;
+    locatorSubtitle: string;
+    useCurrentLocation: string;
+    searchAreaPlaceholder: string;
+    searchBtn: string;
+    queryingOsm: string;
+    facilitiesFound: string;
+    hospitalTag: string;
+    clinicTag: string;
+    diagnosticTag: string;
+    kmAway: string;
+    contactDirectory: string;
+    directions: string;
+    locationDeniedError: string;
+    locationGenericError: string;
+    filterAllHealthcare: string;
+    filterHospitals: string;
+    filterClinics: string;
+    filterDoctors: string;
+    facilitiesFoundWithin: string;
+    doctorTag: string;
+    centreTag: string;
+    otherHealthcareTag: string;
+    loadMore: string;
+    showingCount: string;
+    hoursUnavailable: string;
+    locationAccuracy: string;
+    locationAccuracyApproxWarning: string;
+    specialityLabel: string;
+    callFacility: string;
+  };
   common: {
     loading: string;
     error: string;
@@ -343,6 +442,22 @@ export interface TranslationDictionary {
     hotlinesDirectoryDesc: string;
     searchHotlines: string;
   };
+  voice: {
+    statusListening: string;
+    statusThinking: string;
+    statusSpeaking: string;
+    statusInterrupted: string;
+    statusError: string;
+    statusIdle: string;
+    unavailableNotice: string;
+    micPermissionDenied: string;
+    tapToSpeak: string;
+    tapToInterrupt: string;
+    speakingNotice: string;
+    closeVoice: string;
+    emergencyNotice: string;
+    ttsUnavailableNotice: string;
+  };
 }
 
 export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> = {
@@ -360,6 +475,7 @@ export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> 
       dashboard: 'Dashboard',
       profile: 'Profile',
       admin: 'Admin Console',
+      explainReport: 'Explain Report',
       signIn: 'Sign In',
       signOut: 'Sign Out',
       selectLanguage: 'Select Language',
@@ -569,6 +685,17 @@ export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> 
       multiPointHi: 'Broad national accessibility across rural and urban demographics.',
       multiTryChat: 'Try Health Chat in this language',
 
+      // Demo AI Response List Items
+      demoAiResponseList1: 'Sudden onset high fever (40°C / 104°F)',
+      demoAiResponseList2: 'Severe headache and pain behind the eyes',
+      demoAiResponseList3: 'Muscle and joint pains',
+      demoAiResponseList4: 'Nausea, vomiting, and fatigue',
+
+      // Quick Question Suggestions
+      quickQuestion2: 'How can I prevent diabetes through diet?',
+      quickQuestion3: 'What vaccines are recommended for adults?',
+      quickQuestion4: 'When should someone with high blood pressure seek care?',
+
       // FAQ Section
       faqBadge: 'Common Questions',
       faqTitle: 'Frequently Asked Questions',
@@ -657,6 +784,93 @@ export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> 
       schemaMigrationsReady: 'Schema migrations prepared',
       engineActive: '100% active',
     },
+    report: {
+      back: 'Back',
+      badge: 'Educational Report Explainer',
+      title: 'Health Report Explainer',
+      subtitle: 'Upload your lab or diagnostic report to understand what your numbers mean relative to the report\'s printed reference ranges, identify meaningful patterns, and get questions for your doctor.',
+      readingReport: 'Reading report...',
+      analyzingFindings: 'Analyzing laboratory findings...',
+      generatingExplanation: 'Generating educational explanation...',
+      errorTitle: 'Could not process report',
+      tryAnother: 'Try uploading another document',
+      scannedError: 'This report appears to be a scanned image or photograph without clear selectable text. Please upload a clear digital PDF or high-resolution typed laboratory document.',
+      noTestsError: 'No recognized standard laboratory tests could be identified. Please ensure the document is a laboratory blood or metabolic report containing test names, results, and reference ranges.',
+      disclaimerText: 'This report explanation is generated for educational and disease awareness purposes only. HealthWise AI is not a diagnostic tool and does not provide medical diagnoses or prescriptions. An abnormal result does not necessarily indicate a serious illness. Always share your original laboratory report with a qualified healthcare provider for clinical evaluation.',
+      uploadTitle: 'Upload Your Laboratory or Health Report',
+      uploadSubtitle: 'Drag & drop your report here, or',
+      browseFiles: 'browse files',
+      comparingNotice: 'Comparing reported results with printed reference ranges...',
+      pdfBadge: 'PDF',
+      imgBadge: 'JPG / PNG',
+      maxSizeBadge: 'Max 10 MB',
+      privacyNotice: 'Session-Only Privacy Guarantee',
+      privacyDesc: 'Your medical files and data are analyzed in-memory and discarded upon refresh. No files or personal health data are stored.',
+      analysisComplete: 'Report Analysis Complete',
+      sessionReview: 'Session-only educational review',
+      uploadAnother: 'Upload Another Report',
+      executiveSummaryTitle: 'Executive Educational Summary',
+      testsReviewed: 'Tests Reviewed',
+      withinRange: 'Within Range',
+      outsideRange: 'Outside Range',
+      patternsNoted: 'Patterns Noted',
+      patternsTitle: 'Identified Findings Patterns',
+      patternsSubtitle: 'Clinically meaningful combinations of multiple test findings',
+      markersCount: 'Markers',
+      significance: 'Significance:',
+      reviewedFindingsTitle: 'Reviewed Test Findings',
+      reviewedFindingsSubtitle: 'Values evaluated deterministically against printed report ranges',
+      filterAll: 'All Findings',
+      filterOutside: 'Outside Range',
+      filterWithin: 'Within Range',
+      reportReferenceRange: 'Report Reference Range',
+      whatItMeasures: 'What This Measures',
+      clinicalContext: 'Educational Context',
+      askFollowUpPrompt: 'Ask in HealthWise AI Chat',
+      doctorQuestionsTitle: 'Questions to Ask Your Doctor',
+      doctorQuestionsSubtitle: 'Prepared questions to discuss at your next appointment',
+      askDoctorQuestionBtn: 'Ask HealthWise AI About This',
+      findNearbyBtn: 'Find Healthcare Services Near You',
+      hideNearbyBtn: 'Hide Healthcare Services',
+      belowRangeBadge: 'Below Range',
+      aboveRangeBadge: 'Above Range',
+      withinRangeBadge: 'Within Range',
+      reviewedBadge: 'Reviewed',
+      attentionPrompt: 'Prompt Medical Attention May Be Appropriate',
+      attentionDiscuss: 'Discuss With a Healthcare Professional',
+      attentionInfo: 'Informational Health Review',
+      locatorBadge: 'OpenStreetMap Healthcare Locator',
+      locatorTitle: 'Find Healthcare Near You',
+      locatorSubtitle: 'Locate verified community health centers, primary clinics, and district hospitals for follow-up evaluation.',
+      useCurrentLocation: 'Use Current Location',
+      searchAreaPlaceholder: 'Or enter city / neighborhood (e.g. Hyderabad, Banjara Hills)',
+      searchBtn: 'Search',
+      queryingOsm: 'Querying OpenStreetMap directory...',
+      facilitiesFound: 'Nearby Facilities Found',
+      hospitalTag: 'Hospital',
+      clinicTag: 'Clinic',
+      diagnosticTag: 'Diagnostic Center',
+      kmAway: 'km away',
+      contactDirectory: 'Contact via directory',
+      directions: 'Directions',
+      locationDeniedError: 'Location permission was denied. You can still search by typing your city or area below.',
+      locationGenericError: 'Could not determine your location. Please enter your city or area.',
+      filterAllHealthcare: 'All',
+      filterHospitals: 'Hospitals',
+      filterClinics: 'Clinics',
+      filterDoctors: 'Doctors',
+      facilitiesFoundWithin: 'healthcare facilities found within',
+      doctorTag: 'Doctor / Clinic',
+      centreTag: 'Health Centre',
+      otherHealthcareTag: 'Healthcare',
+      loadMore: 'Load more facilities',
+      showingCount: 'Showing',
+      hoursUnavailable: 'Hours unavailable',
+      locationAccuracy: 'Location accuracy',
+      locationAccuracyApproxWarning: 'Your location is approximate. Enable device GPS for better accuracy.',
+      specialityLabel: 'Speciality',
+      callFacility: 'Call',
+    },
     common: {
       loading: 'Loading...',
       error: 'An error occurred',
@@ -681,6 +895,22 @@ export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> 
       hotlinesDirectoryDesc: 'Official national emergency services and crisis support lines',
       searchHotlines: 'Search hotlines by country or service...',
     },
+    voice: {
+      statusListening: 'Listening... Speak naturally',
+      statusThinking: 'Thinking & checking medical facts...',
+      statusSpeaking: 'Speaking... (Tap or speak to interrupt)',
+      statusInterrupted: 'Interrupted! Listening again...',
+      statusError: 'Voice mode unavailable',
+      statusIdle: 'HealthWise Voice',
+      unavailableNotice: 'Voice input is currently unavailable for this language.',
+      micPermissionDenied: 'Microphone access was denied. Please allow microphone permissions in your browser.',
+      tapToSpeak: 'Tap to speak',
+      tapToInterrupt: 'Tap to interrupt',
+      speakingNotice: 'Listening will resume automatically when response finishes.',
+      closeVoice: 'Close voice mode',
+      emergencyNotice: 'Emergency red-flag advisory detected.',
+      ttsUnavailableNotice: 'Voice output is not available for this language on this device.',
+    },
   },
 
   te: {
@@ -697,6 +927,7 @@ export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> 
       dashboard: 'డ్యాష్‌బోర్డ్',
       profile: 'ప్రొఫైల్',
       admin: 'అడ్మిన్ కన్సోల్',
+      explainReport: 'నివేదిక వివరణ',
       signIn: 'లాగిన్',
       signOut: 'లాగౌట్',
       selectLanguage: 'భాషను ఎంచుకోండి',
@@ -906,6 +1137,17 @@ export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> 
       multiPointHi: 'గ్రామీణ మరియు పట్టణ వర్గాల కోసం విస్తృత జాతీయ అందుబాటు.',
       multiTryChat: 'ఈ భాషలో ఆరోగ్య సంభాషణను ప్రారంభించండి',
 
+      // Demo AI Response List Items
+      demoAiResponseList1: 'అకస్మాత్తుగా మొదలయ్యే అధిక జ్వరం (40°C / 104°F)',
+      demoAiResponseList2: 'తీవ్రమైన తలనొప్పి మరియు కళ్ళ వెనుక నొప్పి',
+      demoAiResponseList3: 'కండరాలు మరియు కీళ్ళ నొప్పులు',
+      demoAiResponseList4: 'వికారం, వాంతులు మరియు అలసట',
+
+      // Quick Question Suggestions
+      quickQuestion2: 'ఆహారం ద్వారా మధుమేహాన్ని ఎలా నివారించవచ్చు?',
+      quickQuestion3: 'పెద్దలకు ఏ టీకాలు సిఫార్సు చేయబడతాయి?',
+      quickQuestion4: 'అధిక రక్తపోటు ఉన్న వ్యక్తి ఎప్పుడు వైద్యుని దగ్గరకు వెళ్ళాలి?',
+
       // FAQ Section
       faqBadge: 'సాధారణ ప్రశ్నలు',
       faqTitle: 'తరచుగా అడిగే ప్రశ్నలు (FAQ)',
@@ -994,6 +1236,93 @@ export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> 
       schemaMigrationsReady: 'స్కీమా మైగ్రేషన్లు సిద్ధంగా ఉన్నాయి',
       engineActive: '100% క్రియాశీలం',
     },
+    report: {
+      back: 'వెనుకకు',
+      badge: 'విద్యా నివేదిక వివరణకర్త',
+      title: 'ఆరోగ్య నివేదిక వివరణకర్త',
+      subtitle: 'మీ ల్యాబ్ లేదా రోగనిర్ధారణ నివేదికను అప్‌లోడ్ చేసి, ముద్రించిన రిఫరెన్స్ పరిధులకు అనుగుణంగా మీ ఫలితాల అర్థాన్ని అర్థం చేసుకోండి, ముఖ్యమైన నమూనాలను గుర్తించండి మరియు వైద్యుడిని అడగవలసిన ప్రశ్నలను పొందండి.',
+      readingReport: 'నివేదికను చదువుతోంది...',
+      analyzingFindings: 'ప్రయోగశాల ఫలితాలను విశ్లేషిస్తోంది...',
+      generatingExplanation: 'విద్యా వివరణను రూపొందిస్తోంది...',
+      errorTitle: 'నివేదికను ప్రాసెస్ చేయలేకపోయాము',
+      tryAnother: 'మరొక పత్రాన్ని అప్‌లోడ్ చేయడానికి ప్రయత్నించండి',
+      scannedError: 'ఈ నివేదిక స్పష్టమైన టెక్స్ట్ లేని స్కాన్ చేసిన చిత్రంగా కనిపిస్తోంది. దయచేసి స్పష్టమైన డిజిటల్ PDF లేదా టైప్ చేసిన పత్రాన్ని అప్‌లోడ్ చేయండి.',
+      noTestsError: 'ప్రామాణిక ప్రయోగశాల పరీక్షలు ఏవీ గుర్తించబడలేదు. దయచేసి ఇది రక్త లేదా జీవక్రియ నివేదిక అని నిర్ధారించుకోండి.',
+      disclaimerText: 'ఈ నివేదిక వివరణ కేవలం విద్యా మరియు ఆరోగ్య అవగాహన ప్రయోజనాల కోసం మాత్రమే రూపొందించబడింది. HealthWise AI రోగ నిర్ధారణ సాధనం కాదు మరియు వైద్య నిర్ధారణలు లేదా మందుల ప్రిస్క్రిప్షన్‌లను అందించదు. అసాధారణ ఫలితం తప్పనిసరిగా తీవ్రమైన అనారోగ్యాన్ని సూచించదు. క్లినికల్ మూల్యాంకనం కోసం ఎల్లప్పుడూ మీ అసలు నివేదికను అర్హత కలిగిన వైద్యుడికి చూపించండి.',
+      uploadTitle: 'మీ ప్రయోగశాల లేదా ఆరోగ్య నివేదికను అప్‌లోడ్ చేయండి',
+      uploadSubtitle: 'మీ నివేదికను ఇక్కడ డ్రాగ్ & డ్రాప్ చేయండి, లేదా',
+      browseFiles: 'ఫైళ్లను ఎంచుకోండి',
+      comparingNotice: 'నివేదిక ఫలితాలను ముద్రించిన రిఫరెన్స్ పరిధులతో పోలుస్తోంది...',
+      pdfBadge: 'PDF',
+      imgBadge: 'JPG / PNG',
+      maxSizeBadge: 'గరిష్టం 10 MB',
+      privacyNotice: 'సెషన్-మాత్రమే గోప్యతా హామీ',
+      privacyDesc: 'మీ వైద్య పత్రాలు మరియు సమాచారం మెమరీలో మాత్రమే విశ్లేషించబడతాయి మరియు పేజీ రీఫ్రెష్ చేసినప్పుడు తొలగించబడతాయి. ఎటువంటి ఫైళ్లు లేదా వ్యక్తిగత డేటా నిల్వ చేయబడదు.',
+      analysisComplete: 'నివేదిక విశ్లేషణ పూర్తయింది',
+      sessionReview: 'సెషన్-మాత్రమే విద్యా సమీక్ష',
+      uploadAnother: 'మరొక నివేదికను అప్‌లోడ్ చేయండి',
+      executiveSummaryTitle: 'విద్యా సారాంశం',
+      testsReviewed: 'సమీక్షించిన పరీక్షలు',
+      withinRange: 'సాధారణ పరిధిలో',
+      outsideRange: 'పరిధి వెలుపల',
+      patternsNoted: 'గుర్తించిన నమూనాలు',
+      patternsTitle: 'గుర్తించిన ఫలితాల నమూనాలు',
+      patternsSubtitle: 'బహుళ పరీక్షల ఫలితాల ఆధారంగా క్లినికల్ నమూనాలు',
+      markersCount: 'మార్కర్లు',
+      significance: 'ప్రాముఖ్యత:',
+      reviewedFindingsTitle: 'సమీక్షించిన పరీక్షల వివరాలు',
+      reviewedFindingsSubtitle: 'ముద్రించిన నివేదిక పరిధులకు అనుగుణంగా అంచనా వేయబడిన విలువలు',
+      filterAll: 'అన్ని ఫలితాలు',
+      filterOutside: 'పరిధి వెలుపల ఉన్నవి',
+      filterWithin: 'పరిధి లోపల ఉన్నవి',
+      reportReferenceRange: 'నివేదిక రిఫరెన్స్ పరిధి',
+      whatItMeasures: 'ఇది ఏమి కొలుస్తుంది',
+      clinicalContext: 'విద్యా నేపథ్యం',
+      askFollowUpPrompt: 'హెల్త్‌వైజ్ AI చాట్‌లో అడగండి',
+      doctorQuestionsTitle: 'మీ వైద్యుడిని అడగవలసిన ప్రశ్నలు',
+      doctorQuestionsSubtitle: 'మీ తదుపరి అపాయింట్‌మెంట్‌లో చర్చించడానికి సిద్ధం చేసిన ప్రశ్నలు',
+      askDoctorQuestionBtn: 'దీని గురించి హెల్త్‌వైజ్ AIని అడగండి',
+      findNearbyBtn: 'మీ సమీపంలో ఆరోగ్య సేవలను కనుగొనండి',
+      hideNearbyBtn: 'ఆరోగ్య సేవలను దాచండి',
+      belowRangeBadge: 'పరిధి కంటే తక్కువ',
+      aboveRangeBadge: 'పరిధి కంటే ఎక్కువ',
+      withinRangeBadge: 'సాధారణ పరిధిలో',
+      reviewedBadge: 'సమీక్షించబడింది',
+      attentionPrompt: 'తక్షణ వైద్య పరిశీలన అవసరం కావచ్చు',
+      attentionDiscuss: 'ఆరోగ్య నిపుణుడితో చర్చించండి',
+      attentionInfo: 'సమాచార ఆరోగ్య సమీక్ష',
+      locatorBadge: 'ఓపెన్‌స్ట్రీట్‌మ్యాప్ ఆరోగ్య కేంద్రాల గుర్తింపు',
+      locatorTitle: 'మీ సమీపంలో ఆరోగ్య కేంద్రాన్ని కనుగొనండి',
+      locatorSubtitle: 'ఫాలో-అప్ మూల్యాంకనం కోసం కమ్యూనిటీ ఆరోగ్య కేంద్రాలు, ప్రాథమిక క్లినిక్‌లు మరియు ఆసుపత్రులను కనుగొనండి.',
+      useCurrentLocation: 'ప్రస్తుత స్థానాన్ని ఉపయోగించండి',
+      searchAreaPlaceholder: 'లేదా నగరం / ప్రాంతాన్ని నమోదు చేయండి (ఉదా. హైదరాబాద్, బంజారా హిల్స్)',
+      searchBtn: 'శోధించండి',
+      queryingOsm: 'ఓపెన్‌స్ట్రీట్‌మ్యాప్ డైరెక్టరీలో శోధిస్తోంది...',
+      facilitiesFound: 'సమీప ఆరోగ్య కేంద్రాలు',
+      hospitalTag: 'ఆసుపత్రి',
+      clinicTag: 'క్లినిక్',
+      diagnosticTag: 'డయాగ్నస్టిక్ సెంటర్',
+      kmAway: 'కి.మీ దూరంలో',
+      contactDirectory: 'డైరెక్టరీ ద్వారా సంప్రదించండి',
+      directions: 'మార్గదర్శకత్వం',
+      locationDeniedError: 'లొకేషన్ అనుమతి నిరాకరించబడింది. మీరు ఇప్పటికీ దిగువన మీ నగరం లేదా ప్రాంతాన్ని టైప్ చేసి శోధించవచ్చు.',
+      locationGenericError: 'మీ స్థానాన్ని గుర్తించలేకపోయాము. దయచేసి మీ నగరం లేదా ప్రాంతాన్ని నమోదు చేయండి.',
+      filterAllHealthcare: 'అన్నీ',
+      filterHospitals: 'ఆసుపత్రులు',
+      filterClinics: 'క్లినిక్‌లు',
+      filterDoctors: 'వైద్యులు',
+      facilitiesFoundWithin: 'ఆరోగ్య సంరక్షణ కేంద్రాలు కనుగొనబడ్డాయి',
+      doctorTag: 'వైద్యుడు / క్లినిక్',
+      centreTag: 'ఆరోగ్య కేంద్రం',
+      otherHealthcareTag: 'వైద్య సేవ',
+      loadMore: 'మరిన్ని కేంద్రాలను చూపించు',
+      showingCount: 'చూపిస్తున్నవి',
+      hoursUnavailable: 'సమయాలు అందుబాటులో లేవు',
+      locationAccuracy: 'స్థాన ఖచ్చితత్వం',
+      locationAccuracyApproxWarning: 'మీ స్థానం సుమారుగా ఉంది. మెరుగైన ఖచ్చితత్వం కోసం పరికర GPS ని ప్రారంభించండి.',
+      specialityLabel: 'ప్రత్యేకత',
+      callFacility: 'కాల్ చేయండి',
+    },
     common: {
       loading: 'లోడ్ అవుతోంది...',
       error: 'ఒక లోపం సంభవించింది',
@@ -1018,6 +1347,22 @@ export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> 
       hotlinesDirectoryDesc: 'అధికారిక జాతీయ అత్యవసర సేవలు మరియు సంక్షోభ సహాయ లైన్లు',
       searchHotlines: 'దేశం లేదా సేవ ద్వారా హెల్ప్‌లైన్లను శోధించండి...',
     },
+    voice: {
+      statusListening: 'వింటున్నాము... సహజంగా మాట్లాడండి',
+      statusThinking: 'ఆలోచిస్తూ వైద్య వాస్తవాలను తనిఖీ చేస్తున్నాము...',
+      statusSpeaking: 'మాట్లాడుతున్నాము... (అంతరాయం కలిగించడానికి నొక్కండి లేదా మాట్లాడండి)',
+      statusInterrupted: 'అంతరాయం కలిగింది! మళ్లీ వింటున్నాము...',
+      statusError: 'వాయిస్ మోడ్ అందుబాటులో లేదు',
+      statusIdle: 'హెల్త్‌వైజ్ వాయిస్',
+      unavailableNotice: 'ఈ భాషకు వాయిస్ ఇన్‌పుట్ ప్రస్తుతం అందుబాటులో లేదు.',
+      micPermissionDenied: 'మైక్రోఫోన్ అనుమతి నిరాకరించబడింది. దయచేసి బ్రౌజర్‌లో మైక్రోఫోన్ అనుమతించండి.',
+      tapToSpeak: 'మాట్లాడటానికి నొక్కండి',
+      tapToInterrupt: 'అంతరాయం కలిగించడానికి నొక్కండి',
+      speakingNotice: 'సమాధానం ముగిసిన తర్వాత స్వయంచాలితంగా వినడం ప్రారంభమవుతుంది.',
+      closeVoice: 'వాయిస్ మోడ్ మూసివేయి',
+      emergencyNotice: 'అత్యవసర హెచ్చరిక గుర్తించబడింది.',
+      ttsUnavailableNotice: 'ఈ పరికరంలో ఈ భాషకు వాయిస్ అవుట్‌పుట్ అందుబాటులో లేదు.',
+    },
   },
 
   hi: {
@@ -1034,6 +1379,7 @@ export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> 
       dashboard: 'डैशबोर्ड',
       profile: 'प्रोफ़ाइल',
       admin: 'व्यवस्थापक कंसोल',
+      explainReport: 'रिपोर्ट व्याख्या',
       signIn: 'साइन इन',
       signOut: 'साइन आउट',
       selectLanguage: 'भाषा चुनें',
@@ -1243,6 +1589,17 @@ export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> 
       multiPointHi: 'ग्रामीण और शहरी दोनों क्षेत्रों में व्यापक राष्ट्रीय पहुंच।',
       multiTryChat: 'इस भाषा में स्वास्थ्य चैट शुरू करें',
 
+      // Demo AI Response List Items
+      demoAiResponseList1: 'अचानक तेज बुखार (40°C / 104°F)',
+      demoAiResponseList2: 'तीव्र सिरदर्द और आँखों के पीछे दर्द',
+      demoAiResponseList3: 'मांसपेशियों और जोड़ों में दर्द',
+      demoAiResponseList4: 'मतली, उल्टी और थकान',
+
+      // Quick Question Suggestions
+      quickQuestion2: 'आहार के माध्यम से मधुमेह को कैसे रोकें?',
+      quickQuestion3: 'वयस्कों के लिए कौन से टीके अनुशंसित हैं?',
+      quickQuestion4: 'उच्च रक्तचाप वाले व्यक्ति को डॉक्टर के पास कब जाना चाहिए?',
+
       // FAQ Section
       faqBadge: 'सामान्य प्रश्न',
       faqTitle: 'अक्सर पूछे जाने वाले प्रश्न (FAQ)',
@@ -1331,6 +1688,93 @@ export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> 
       schemaMigrationsReady: 'स्कीमा माइग्रेशन तैयार हैं',
       engineActive: '100% सक्रिय',
     },
+    report: {
+      back: 'वापस',
+      badge: 'शैक्षिक रिपोर्ट व्याख्याकर्ता',
+      title: 'स्वास्थ्य रिपोर्ट व्याख्याकर्ता',
+      subtitle: 'अपनी लैब या नैदानिक रिपोर्ट अपलोड करें और समझें कि संदर्भ सीमाओं के अनुसार आपके परिणाम क्या दर्शाते हैं, महत्वपूर्ण पैटर्न पहचानें और अपने डॉक्टर से पूछने योग्य प्रश्न प्राप्त करें।',
+      readingReport: 'रिपोर्ट पढ़ी जा रही है...',
+      analyzingFindings: 'प्रयोगशाला परिणामों का विश्लेषण हो रहा है...',
+      generatingExplanation: 'शैक्षिक व्याख्या तैयार की जा रही है...',
+      errorTitle: 'रिपोर्ट संसाधित नहीं की जा सकी',
+      tryAnother: 'अन्य दस्तावेज़ अपलोड करने का प्रयास करें',
+      scannedError: 'यह रिपोर्ट बिना स्पष्ट टेक्स्ट वाली स्कैन की गई छवि प्रतीत होती है। कृपया स्पष्ट डिजिटल पीडीएफ या टाइप किया गया दस्तावेज़ अपलोड करें।',
+      noTestsError: 'कोई भी मानक प्रयोगशाला परीक्षण पहचाना नहीं जा सका। कृपया सुनिश्चित करें कि यह रक्त या चयापचय रिपोर्ट है।',
+      disclaimerText: 'यह रिपोर्ट व्याख्या केवल शैक्षिक एवं स्वास्थ्य जागरूकता उद्देश्यों के लिए तैयार की गई है। HealthWise AI कोई नैदानिक उपकरण नहीं है और कोई चिकित्सीय निदान या नुस्खा प्रदान नहीं करता है। असामान्य परिणाम आवश्यक रूप से गंभीर बीमारी का संकेत नहीं है। नैदानिक मूल्यांकन के लिए हमेशा अपनी मूल रिपोर्ट किसी योग्य चिकित्सक को दिखाएं।',
+      uploadTitle: 'अपनी प्रयोगशाला या स्वास्थ्य रिपोर्ट अपलोड करें',
+      uploadSubtitle: 'अपनी रिपोर्ट यहाँ खींचें और छोड़ें, या',
+      browseFiles: 'फ़ाइलें चुनें',
+      comparingNotice: 'रिपोर्ट परिणामों की संदर्भ सीमाओं से तुलना की जा रही है...',
+      pdfBadge: 'PDF',
+      imgBadge: 'JPG / PNG',
+      maxSizeBadge: 'अधिकतम 10 MB',
+      privacyNotice: 'सत्र-मात्र गोपनीयता गारंटी',
+      privacyDesc: 'आपकी मेडिकल फ़ाइलें और डेटा केवल मेमोरी में विश्लेषित होते हैं और पेज रीफ़्रेश करने पर हटा दिए जाते हैं। कोई भी व्यक्तिगत डेटा संग्रहीत नहीं किया जाता।',
+      analysisComplete: 'रिपोर्ट विश्लेषण पूरा हुआ',
+      sessionReview: 'सत्र-मात्र शैक्षिक समीक्षा',
+      uploadAnother: 'अन्य रिपोर्ट अपलोड करें',
+      executiveSummaryTitle: 'शैक्षिक सारांश',
+      testsReviewed: 'समीक्षित परीक्षण',
+      withinRange: 'सामान्य सीमा में',
+      outsideRange: 'सीमा से बाहर',
+      patternsNoted: 'पहचाने गए पैटर्न',
+      patternsTitle: 'पहचाने गए परिणामों के पैटर्न',
+      patternsSubtitle: 'कई परीक्षणों के आधार पर चिकित्सकीय रूप से सार्थक संयोजन',
+      markersCount: 'मार्कर',
+      significance: 'महत्व:',
+      reviewedFindingsTitle: 'समीक्षित परीक्षण परिणाम',
+      reviewedFindingsSubtitle: 'रिपोर्ट में दी गई संदर्भ सीमाओं के अनुसार मूल्यांकित मूल्य',
+      filterAll: 'सभी परिणाम',
+      filterOutside: 'सीमा से बाहर',
+      filterWithin: 'सीमा के भीतर',
+      reportReferenceRange: 'रिपोर्ट संदर्भ सीमा',
+      whatItMeasures: 'यह क्या मापता है',
+      clinicalContext: 'शैक्षिक संदर्भ',
+      askFollowUpPrompt: 'हेल्थवाइज AI चैट में पूछें',
+      doctorQuestionsTitle: 'अपने डॉक्टर से पूछने योग्य प्रश्न',
+      doctorQuestionsSubtitle: 'अपनी अगली अपॉइंटमेंट में चर्चा के लिए तैयार प्रश्न',
+      askDoctorQuestionBtn: 'इसके बारे में हेल्थवाइज AI से पूछें',
+      findNearbyBtn: 'अपने नजदीकी स्वास्थ्य सेवाएं खोजें',
+      hideNearbyBtn: 'स्वास्थ्य सेवाएं छिपाएं',
+      belowRangeBadge: 'सीमा से कम',
+      aboveRangeBadge: 'सीमा से अधिक',
+      withinRangeBadge: 'सामान्य सीमा में',
+      reviewedBadge: 'समीक्षित',
+      attentionPrompt: 'तत्काल चिकित्सीय परामर्श उचित हो सकता है',
+      attentionDiscuss: 'स्वास्थ्य विशेषज्ञ से चर्चा करें',
+      attentionInfo: 'सूचनात्मक स्वास्थ्य समीक्षा',
+      locatorBadge: 'ओपनस्ट्रीटमैप स्वास्थ्य केंद्र लोकेटर',
+      locatorTitle: 'अपने नजदीकी स्वास्थ्य केंद्र खोजें',
+      locatorSubtitle: 'फॉलो-अप मूल्यांकन के लिए सत्यापित सामुदायिक स्वास्थ्य केंद्र, प्राथमिक क्लीनिक और अस्पताल खोजें।',
+      useCurrentLocation: 'वर्तमान स्थान का उपयोग करें',
+      searchAreaPlaceholder: 'या शहर / क्षेत्र दर्ज करें (उदा. हैदराबाद, बंजारा हिल्स)',
+      searchBtn: 'खोजें',
+      queryingOsm: 'ओपनस्ट्रीटमैप निर्देशिका में खोज हो रही है...',
+      facilitiesFound: 'नजदीकी स्वास्थ्य सुविधाएं',
+      hospitalTag: 'अस्पताल',
+      clinicTag: 'क्लीनिक',
+      diagnosticTag: 'डायग्नोस्टिक सेंटर',
+      kmAway: 'किमी दूर',
+      contactDirectory: 'निर्देशिका द्वारा संपर्क करें',
+      directions: 'दिशा-निर्देश',
+      locationDeniedError: 'स्थान अनुमति अस्वीकृत कर दी गई। आप नीचे अपना शहर या क्षेत्र लिखकर खोज सकते हैं।',
+      locationGenericError: 'आपका स्थान निर्धारित नहीं हो सका। कृपया अपना शहर या क्षेत्र दर्ज करें।',
+      filterAllHealthcare: 'सभी',
+      filterHospitals: 'अस्पताल',
+      filterClinics: 'क्लीनिक',
+      filterDoctors: 'चिकित्सक',
+      facilitiesFoundWithin: 'स्वास्थ्य सुविधाएं उपलब्ध हैं',
+      doctorTag: 'चिकित्सक / क्लीनिक',
+      centreTag: 'स्वास्थ्य केंद्र',
+      otherHealthcareTag: 'स्वास्थ्य सेवा',
+      loadMore: 'और सुविधाएं दिखाएं',
+      showingCount: 'प्रदर्शित',
+      hoursUnavailable: 'कार्य समय उपलब्ध नहीं',
+      locationAccuracy: 'स्थान सटीकता',
+      locationAccuracyApproxWarning: 'आपका स्थान अनुमानित है। बेहतर सटीकता के लिए डिवाइस जीपीएस सक्षम करें।',
+      specialityLabel: 'विशेषज्ञता',
+      callFacility: 'कॉल करें',
+    },
     common: {
       loading: 'लोड हो रहा है...',
       error: 'एक त्रुटि हुई',
@@ -1354,6 +1798,22 @@ export const TRANSLATIONS: Record<SupportedLanguageCode, TranslationDictionary> 
       hotlinesDirectoryTitle: 'आपातकालीन एवं संकट हेल्पलाइन निर्देशिका',
       hotlinesDirectoryDesc: 'आधिकारिक राष्ट्रीय आपातकालीन सेवाएं और संकट सहायता लाइनें',
       searchHotlines: 'देश या सेवा के अनुसार हेल्पलाइन खोजें...',
+    },
+    voice: {
+      statusListening: 'सुन रहे हैं... स्वाभाविक रूप से बोलें',
+      statusThinking: 'सोच रहे हैं और चिकित्सकीय तथ्यों की पुष्टि कर रहे हैं...',
+      statusSpeaking: 'बोल रहे हैं... (रोकने के लिए टैप करें या बोलें)',
+      statusInterrupted: 'रोका गया! दोबारा सुन रहे हैं...',
+      statusError: 'वॉइस मोड अनुपलब्ध है',
+      statusIdle: 'हेल्थवाइज़ वॉइस',
+      unavailableNotice: 'इस भाषा के लिए वॉइस इनपुट वर्तमान में अनुपलब्ध है।',
+      micPermissionDenied: 'माइक्रोफ़ोन एक्सेस अस्वीकार कर दिया गया था। कृपया ब्राउज़र में अनुमति दें।',
+      tapToSpeak: 'बोलने के लिए टैप करें',
+      tapToInterrupt: 'रोकने के लिए टैप करें',
+      speakingNotice: 'उत्तर पूरा होने पर अपने आप दोबारा सुनना शुरू हो जाएगा।',
+      closeVoice: 'वॉइस मोड बंद करें',
+      emergencyNotice: 'आपातकालीन चेतावनी का पता चला।',
+      ttsUnavailableNotice: 'इस डिवाइस पर इस भाषा के लिए वॉइस आउटपुट उपलब्ध नहीं है।',
     },
   },
 };

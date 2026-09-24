@@ -51,10 +51,13 @@ ${chunk.content}
     evidenceText += `
 [CRITICAL INSTRUCTIONS FOR AI]
 1. Ground your answer in the authentic WHO evidence provided above.
-2. At the end of your answer, naturally reference the official source document name: "${retrieval.chunks[0].docTitle}".
-3. Do NOT invent symptoms, numbers, or treatments not supported by the evidence above.
-4. Do NOT diagnose the user or recommend prescription medications.
-5. Emphasize prevention, symptom awareness, and when to seek medical attention.
+2. SYNTHESIZE the evidence: Explain it in simple, everyday language. Never copy/paste raw chunks or dump large passages.
+3. DIRECT ANSWER FIRST: Address the user's specific question in the opening sentence.
+4. TARGET LENGTH: Aim for 80–180 words for standard queries. Expand only if the user asks for comprehensive or detailed info.
+5. At the end of your answer, naturally reference the official source document name: "${retrieval.chunks[0].docTitle}".
+6. Do NOT invent symptoms, numbers, or treatments not supported by the evidence above.
+7. Do NOT diagnose the user or recommend prescription medications.
+8. Emphasize prevention, symptom awareness, and when to seek medical attention.
 `;
 
     return {
