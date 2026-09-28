@@ -1,10 +1,14 @@
 <div align="center">
 
+<img src="public/favicon.svg" alt="HealthWise AI Logo" width="120" />
+
 # HealthWise AI
 
 **AI-powered public health chatbot grounded in WHO evidence**
 
 An educational health information system that retrieves trusted WHO factsheets, synthesises answers with AI, and refuses to diagnose or prescribe.
+
+🌐 [**Live Demo →** healthwise-ai-chatbot.vercel.app](https://healthwise-ai-chatbot.vercel.app)
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/)
