@@ -16,10 +16,10 @@ import {
   MessageSquare,
   X,
   Menu,
-  Sparkles,
   PhoneCall,
   Mic,
-  FileText,
+  Camera,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
@@ -34,6 +34,7 @@ import { useVoiceMode } from '../hooks/useVoiceMode';
 import { puterAIService } from '../services/ai/puter-ai-service';
 import { feedbackService } from '../services/admin/feedback-service';
 import { securitySanitizer } from '../services/security/sanitizer';
+import { NearbyHealthcarePanel } from '../components/healthcare/NearbyHealthcarePanel';
 
 export const ChatPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -63,6 +64,10 @@ export const ChatPage: React.FC = () => {
   } = useChat();
 
   const [input, setInput] = useState('');
+  const [imageAttachment, setImageAttachment] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isHotlinesOpen, setIsHotlinesOpen] = useState(false);
   const [dismissedEmergency, setDismissedEmergency] = useState(false);
@@ -121,9 +126,15 @@ export const ChatPage: React.FC = () => {
   }, [initialPrompt, isLoadingSessions, searchParams, navigate, location.pathname]);
 
   const handleSend = async (textToSend?: string) => {
-    const query = textToSend || input;
-    if (!query.trim()) return;
+    let query = textToSend || input;
+    if (!query.trim() && !imageAttachment) return;
+    
+    if (imageAttachment) {
+      query = query + `\n\n![Attached Image](${imageAttachment})`;
+    }
+    
     setInput('');
+    setImageAttachment(null);
     await send(query.trim());
   };
 
@@ -144,6 +155,45 @@ export const ChatPage: React.FC = () => {
   const handleDeleteSession = async (e: React.MouseEvent, sid: string) => {
     e.stopPropagation();
     await removeSession(sid);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // Max dimension 800px to keep payload size reasonable
+        const MAX_DIM = 800;
+        if (width > height && width > MAX_DIM) {
+          height = Math.round((height * MAX_DIM) / width);
+          width = MAX_DIM;
+        } else if (height > MAX_DIM) {
+          width = Math.round((width * MAX_DIM) / height);
+          height = MAX_DIM;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Convert to high-quality JPEG base64
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+        setImageAttachment(compressedBase64);
+        
+        // Reset input so the same file can be selected again if removed
+        e.target.value = '';
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   const samplePrompts = [
@@ -173,25 +223,50 @@ export const ChatPage: React.FC = () => {
   };
 
   // Render markdown-like bold and blockquote text
-  const renderContent = (text: string) => {
-    const parts = text.split(/(\*\*[^*]+\*\*)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>;
-      }
-      if (part.startsWith('> ')) {
-        return (
-          <blockquote key={i} className="border-l-2 border-teal-400 pl-3 my-2 text-xs text-slate-600 italic">
-            {part.slice(2)}
-          </blockquote>
-        );
-      }
-      return <span key={i}>{part}</span>;
-    });
+  const renderContent = (text: string, intent?: string | null) => {
+    // If it's a medicine explainer, we might want to wrap the whole content in a special card style
+    // but the markdown parsing itself can just be enhanced.
+    const isMedicine = intent === 'medicine_explainer';
+    
+    return (
+      <div className={isMedicine ? "p-4 bg-white border border-teal-200 rounded-xl shadow-sm" : ""}>
+        {text.split('\n').map((line, idx) => {
+          let content: React.ReactNode = line;
+          
+          if (line.startsWith('### 💊 Medicine Information:')) {
+            content = <div className="text-lg font-bold text-teal-800 mb-2 border-b border-teal-100 pb-2">{line.replace('### ', '')}</div>;
+          } else if (line.startsWith('### ')) {
+            content = <h3 className="text-lg font-bold mt-3 mb-1 text-slate-800">{line.replace('### ', '')}</h3>;
+          } else if (line.startsWith('> ')) {
+            content = <blockquote className="border-l-4 border-amber-400 bg-amber-50 p-2 my-2 text-xs text-amber-900 rounded-r-md">{line.replace('> ', '')}</blockquote>;
+          } else if (line.trim().startsWith('- ')) {
+            const parts = line.replace('- ', '').split(/(\*\*[^*]+\*\*)/g);
+            content = (
+              <li className="ml-4 list-disc marker:text-teal-500 mb-1">
+                {parts.map((p, i) => p.startsWith('**') ? <strong key={i}>{p.slice(2, -2)}</strong> : <span key={i}>{p}</span>)}
+              </li>
+            );
+          } else if (/^!\[.*?\]\((data:image\/[^;]+;base64,[^)]+)\)/.test(line)) {
+            const match = line.match(/^!\[.*?\]\((data:image\/[^;]+;base64,[^)]+)\)/);
+            if (match) {
+              content = <img src={match[1]} alt="Attached" className="max-w-full h-auto rounded-xl mt-2 mb-2 max-h-64 object-contain shadow-sm border border-slate-200" />;
+            }
+          } else {
+            const parts = line.split(/(\*\*[^*]+\*\*)/g);
+            content = (
+              <div className="mb-2 min-h-[1rem]">
+                {parts.map((p, i) => p.startsWith('**') ? <strong key={i} className="font-semibold text-slate-900">{p.slice(2, -2)}</strong> : <span key={i}>{p}</span>)}
+              </div>
+            );
+          }
+          return <React.Fragment key={idx}>{content}</React.Fragment>;
+        })}
+      </div>
+    );
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem-2.5rem-4.5rem-env(safe-area-inset-bottom))] sm:h-[calc(100vh-5rem-2.5rem)] max-w-7xl mx-auto">
+    <div className="flex flex-1 min-h-0 h-full max-w-7xl mx-auto w-full">
       {/* Sidebar: Chat History */}
       <aside
         className={`${
@@ -298,10 +373,6 @@ export const ChatPage: React.FC = () => {
               <div className="flex items-center gap-2 min-w-0">
                 <h2 className="font-bold text-sm text-slate-900 truncate">HealthWise AI</h2>
                 <Badge variant="success" size="sm">Evidence Grounded</Badge>
-                <Badge variant="neutral" size="sm" className="hidden sm:inline-flex items-center gap-1 font-mono text-[10px] text-slate-600">
-                  <Sparkles className="w-2.5 h-2.5 text-teal-600" />
-                  {import.meta.env.VITE_PUTER_AI_MODEL || 'gpt-4o-mini'}
-                </Badge>
               </div>
               <p className="text-[10px] text-slate-500 hidden sm:block truncate">
                 {activeSessionId
@@ -312,24 +383,6 @@ export const ChatPage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => navigate('/report')}
-              className="text-teal-700 hover:text-teal-800 hover:bg-teal-50 border-teal-200"
-              leftIcon={<FileText className="w-3.5 h-3.5" />}
-            >
-              <span className="hidden sm:inline">Explain Report</span>
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={openVoiceMode}
-              className="text-teal-700 hover:text-teal-800 hover:bg-teal-50 border-teal-200"
-              leftIcon={<Mic className="w-3.5 h-3.5" />}
-            >
-              <span className="hidden sm:inline">Voice Mode</span>
-            </Button>
             <Button
               size="sm"
               variant="outline"
@@ -362,7 +415,7 @@ export const ChatPage: React.FC = () => {
                 <span className="text-xs text-slate-500">Loading conversation...</span>
               </div>
             </div>
-          ) : messages.length === 0 && !activeSessionId ? (
+          ) : messages.length === 0 ? (
             /* Empty state — greeting card */
             <div className="flex items-center justify-center h-full">
               <div className="text-center space-y-4 max-w-md px-4">
@@ -420,9 +473,15 @@ export const ChatPage: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="whitespace-pre-line text-xs sm:text-sm">
-                      {renderContent(msg.content)}
+                    <div className={`whitespace-pre-line text-xs sm:text-sm ${msg.intent === 'medicine_explainer' ? '-mx-2 -mt-2' : ''}`}>
+                      {renderContent(msg.content, msg.intent)}
                     </div>
+
+                    {msg.intent === 'location_healthcare' && (
+                      <div className="mt-3 mb-1 w-full max-w-full overflow-hidden">
+                        <NearbyHealthcarePanel />
+                      </div>
+                    )}
 
                     {/* Source citations */}
                     {msg.sources && msg.sources.length > 0 && msg.sender === 'assistant' && (
@@ -557,6 +616,17 @@ export const ChatPage: React.FC = () => {
 
         {/* Chat Input */}
         <div className="bg-white border border-slate-200/90 rounded-2xl p-2 sm:p-2.5 shadow-md flex-shrink-0">
+          {imageAttachment && (
+            <div className="relative inline-block mb-2 px-2">
+              <img src={imageAttachment} alt="Preview" className="h-16 w-auto rounded-lg border border-slate-200 shadow-sm" />
+              <button 
+                onClick={() => setImageAttachment(null)}
+                className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-0.5 hover:bg-rose-600 shadow-sm"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -572,6 +642,66 @@ export const ChatPage: React.FC = () => {
               className="flex-1 min-w-0 text-sm bg-transparent border-none focus:outline-none px-2 text-slate-800 placeholder:text-slate-400"
               disabled={isTyping}
             />
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+            />
+            <input 
+              type="file" 
+              accept="image/*" 
+              capture="environment"
+              className="hidden" 
+              ref={cameraInputRef}
+              onChange={handleImageUpload}
+            />
+            
+            <div className="relative flex items-center">
+              <button
+                type="button"
+                onClick={() => setIsAttachmentMenuOpen(!isAttachmentMenuOpen)}
+                title="Attach Image"
+                aria-label="Attach Image"
+                className="p-2 text-slate-500 hover:text-teal-700 hover:bg-teal-50 rounded-xl transition-colors"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+              
+              {isAttachmentMenuOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setIsAttachmentMenuOpen(false)} 
+                  />
+                  <div className="absolute bottom-full mb-3 -ml-16 sm:-ml-10 left-1/2 sm:left-auto bg-white border border-slate-200 shadow-xl rounded-2xl py-1.5 z-50 w-48 text-sm flex flex-col">
+                    <button
+                      type="button"
+                      className="flex items-center gap-2.5 px-3.5 py-2.5 text-slate-700 hover:bg-teal-50 hover:text-teal-700 text-left transition-colors font-medium"
+                      onClick={() => {
+                        setIsAttachmentMenuOpen(false);
+                        cameraInputRef.current?.click();
+                      }}
+                    >
+                      <span className="text-base">📸</span>
+                      <span>Take a photo</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="flex items-center gap-2.5 px-3.5 py-2.5 text-slate-700 hover:bg-teal-50 hover:text-teal-700 text-left transition-colors font-medium"
+                      onClick={() => {
+                        setIsAttachmentMenuOpen(false);
+                        fileInputRef.current?.click();
+                      }}
+                    >
+                      <span className="text-base">🖼️</span>
+                      <span>Choose from device</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
             <button
               type="button"
               onClick={openVoiceMode}
@@ -584,7 +714,7 @@ export const ChatPage: React.FC = () => {
             <Button
               type="submit"
               size="sm"
-              disabled={!input.trim() || isTyping}
+              disabled={(!input.trim() && !imageAttachment) || isTyping}
               rightIcon={<Send className="w-4 h-4" />}
             >
               <span className="hidden sm:inline">{t('chat', 'send')}</span>

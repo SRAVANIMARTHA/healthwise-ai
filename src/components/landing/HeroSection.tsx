@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare, ArrowRight, ShieldCheck, Sparkles, BookOpen, HeartPulse, CheckCircle2 } from 'lucide-react';
 import { Button } from '../common/Button';
@@ -11,9 +11,9 @@ export const HeroSection: React.FC = () => {
 
   const quickQuestions = [
     t('home', 'demoUserQuery'),
-    t('home', 'quickQuestion2'),
-    t('home', 'quickQuestion3'),
-    t('home', 'quickQuestion4'),
+    "How can I prevent diabetes through diet?",
+    "What vaccines are recommended for adults?",
+    "When should someone with high blood pressure seek care?",
   ];
 
   return (
@@ -107,10 +107,10 @@ export const HeroSection: React.FC = () => {
                       {t('home', 'demoAiResponse')}
                     </p>
                     <ul className="list-disc pl-4 space-y-1 text-slate-700 text-xs">
-                      <li>{t('home', 'demoSymptom1')}</li>
-                      <li>{t('home', 'demoSymptom2')}</li>
-                      <li>{t('home', 'demoSymptom3')}</li>
-                      <li>{t('home', 'demoSymptom4')}</li>
+                      <li>Sudden onset high fever (40°C / 104°F)</li>
+                      <li>Severe headache and pain behind the eyes</li>
+                      <li>Muscle and joint pains</li>
+                      <li>Nausea, vomiting, and fatigue</li>
                     </ul>
                     <div className="bg-amber-50 border-l-2 border-amber-500 p-2 text-[11px] text-amber-900 rounded">
                       ⚠️ {t('home', 'demoRedFlag')}
@@ -146,4 +146,3 @@ export const HeroSection: React.FC = () => {
     </section>
   );
 };
-

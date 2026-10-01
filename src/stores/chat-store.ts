@@ -168,7 +168,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       session_id: activeSessionId,
       sender: 'assistant',
       content: aiResult.content,
-      intent: null,
+      intent: aiResult.intent || null,
       urgency_level: aiResult.urgency,
       sources: aiResult.sources,
     });

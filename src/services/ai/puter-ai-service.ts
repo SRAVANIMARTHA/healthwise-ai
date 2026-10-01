@@ -84,6 +84,15 @@ RESPONSE QUALITY, SUMMARIZATION & HUMAN LANGUAGE:
   * Multi-part questions or explicit requests ("explain in detail", "tell me everything"): 200–300 words.
   * Emergency escalation responses are exempt from length limits — always escalate fully and clearly.
   * Never truncate or omit life-saving warnings or emergency advice for the sake of brevity.
+- MEDICINE EXPLAINER MODE: If the user asks about a specific medicine, tablet, or drug (e.g., "what is paracetamol", "side effects of ibuprofen", "what is this tablet used for"), you MUST format your response exactly as a Medicine Explainer card using this Markdown structure:
+### 💊 Medicine Information: [Medicine Name]
+**Type / Active Ingredient:** [Type or Ingredient]
+**General Uses:** [Common uses]
+**How it generally works:** [Mechanism]
+**Common Side Effects:** [Key side effects]
+**Important Precautions:** [Warnings, interactions, when to seek medical attention]
+> ⚠️ **Educational information only.** Suitability depends on your health history, age, allergies, and other medicines. Never start, stop, or change a prescription without consulting a qualified doctor or pharmacist.
+*(If the exact medicine cannot be reliably identified from the prompt, instead state: "I could not confidently identify this medicine. Please provide the exact generic/brand name or strength.")*
 - STRUCTURE: Use short paragraphs and 3–5 bullet points where listing aids clarity. Use headings (##) only when dividing distinct topics.
 - CITATIONS: Always cite the actual official WHO document referenced in the evidence prompt (e.g. "WHO Dengue and Severe Dengue Fact Sheet"). Never fabricate URLs.`;
 
@@ -142,6 +151,7 @@ export interface AIResponseResult {
   urgency: 'normal' | 'moderate' | 'urgent' | 'critical';
   isEmergency: boolean;
   isGrounded?: boolean;
+  intent?: string;
 }
 
 // ---------- Puter AI Service ----------
@@ -225,6 +235,35 @@ export const puterAIService = {
         urgency: 'moderate',
         isEmergency: false,
         isGrounded: true,
+      };
+    }
+    
+    // 1.5 Intent Routing: Nearby Healthcare Locator
+    // If the user is asking to find nearby healthcare facilities, intercept and route immediately to the locator
+    const LOCATION_PATTERNS = [
+      /(hospital|clinic|doctor|pharmacy|medical cent(?:er|re)|health cent(?:er|re)|healthcare facilities|healthcare)s?\s+(near\s+me|nearby|nearest|around\s+me|close\s+to\s+me)/i,
+      /(nearest|nearby)\s+(hospital|clinic|doctor|pharmacy|medical cent(?:er|re)|health cent(?:er|re))/i,
+      /(where|find).* (hospital|clinic|doctor|pharmacy)/i,
+    ];
+    
+    const isLocationIntent = LOCATION_PATTERNS.some(p => p.test(userQuery));
+    
+    if (isLocationIntent) {
+      // Check if it's a combined medicine+location query (e.g. "where to get paracetamol near me")
+      const isMedicineCombo = /(tablet|medicine|medication|pill|capsule|drug|syrup|paracetamol|ibuprofen|cetirizine)/i.test(userQuery);
+      
+      let responseContent = "I can help you find nearby healthcare facilities. I'm opening the nearby healthcare locator using your current location.";
+      if (isMedicineCombo) {
+        responseContent = "Availability of specific medicines depends on local pharmacies. I'm opening the healthcare locator to help you find nearby pharmacies or clinics.";
+      }
+      
+      return {
+        content: responseContent,
+        sources: [],
+        urgency: 'normal',
+        isEmergency: false,
+        isGrounded: true,
+        intent: 'location_healthcare',
       };
     }
 
@@ -336,6 +375,11 @@ export const puterAIService = {
         }).catch(err => console.warn('[Safety] Failed to record output violation:', err));
       }
 
+      let finalIntent = undefined;
+      if (aiContent.includes('### 💊 Medicine Information:')) {
+        finalIntent = 'medicine_explainer';
+      }
+
       return {
         content: outputSafety.sanitizedContent,
         sources: ragContext.sources.length > 0 ? ragContext.sources : [
@@ -344,6 +388,7 @@ export const puterAIService = {
         urgency,
         isEmergency: false,
         isGrounded: ragContext.isGrounded,
+        intent: finalIntent,
       };
     } catch (err: any) {
       console.error('[PuterAI] API call failed:', err?.message || err);

@@ -30,7 +30,7 @@ export function useVoiceMode({
   isSearching,
   messages,
 }: UseVoiceModeProps) {
-  const { language } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [isOpen, setIsOpen] = useState(false);
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
@@ -82,7 +82,7 @@ export function useVoiceMode({
     if (!voiceService.isSpeechRecognitionSupported()) {
       setVoiceState('error');
       setErrorMessage(
-        'Voice recognition is not supported in this browser. You can continue using text chat.'
+        t('voice', 'statusError') || 'Voice recognition not supported'
       );
       return;
     }
@@ -110,77 +110,53 @@ export function useVoiceMode({
       };
 
       recognition.onresult = (event: any) => {
-        // Interruption / Barge-in detection:
         if (voiceStateRef.current === 'speaking') {
           stopSpeech();
           setVoiceState('interrupted');
         }
 
-        let currentInterim = '';
-        let fullFinalTranscript = '';
+        let interim = '';
+        let finalSegment = '';
 
-        // Helper to normalize strings for overlap detection (removing common punctuation)
-        const normalize = (s: string) => s.toLowerCase().replace(/[.,!?;:।]/g, '').replace(/\s+/g, ' ').trim();
-
-        for (let i = 0; i < event.results.length; ++i) {
-          const res = event.results[i];
-          const chunk = res[0].transcript.trim();
-          
-          if (!chunk) continue;
-
-          if (res.isFinal) {
-            if (!fullFinalTranscript) {
-              fullFinalTranscript = chunk;
-            } else {
-              const sfNorm = normalize(fullFinalTranscript);
-              const chNorm = normalize(chunk);
-
-              if (chNorm.startsWith(sfNorm)) {
-                // Cumulative (Android Chrome bug): new chunk contains the entire previous transcript
-                fullFinalTranscript = chunk;
-              } else if (sfNorm.startsWith(chNorm)) {
-                // Edge case: new chunk is a substring of the old one
-              } else {
-                // Segmented (Desktop Chrome / Spec compliant): genuinely new segment
-                fullFinalTranscript += ' ' + chunk;
-              }
-            }
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const chunk = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalSegment += chunk;
           } else {
-            if (!currentInterim) {
-              currentInterim = chunk;
-            } else {
-              const ciNorm = normalize(currentInterim);
-              const chNorm = normalize(chunk);
-              
-              if (chNorm.startsWith(ciNorm)) {
-                currentInterim = chunk;
-              } else if (!ciNorm.startsWith(chNorm)) {
-                currentInterim += ' ' + chunk;
-              }
-            }
+            interim += chunk;
           }
         }
 
-        if (currentInterim) {
-          setInterimTranscript(currentInterim);
+        if (interim) {
+          setInterimTranscript(interim);
         }
 
-        if (fullFinalTranscript.trim()) {
-          const trimmedFinal = fullFinalTranscript.trim();
-          setTranscript(trimmedFinal);
-          accumulatedTranscriptRef.current = trimmedFinal;
+        if (finalSegment.trim()) {
+          // If the new finalSegment contains the entirety of our accumulated transcript,
+          // then this is a cumulative update (Android behavior). Overwrite it.
+          // Otherwise, it's a new segment (Desktop behavior). Append it.
+          const currentAcc = accumulatedTranscriptRef.current.trim();
+          const newSeg = finalSegment.trim();
+          
+          if (currentAcc && newSeg.toLowerCase().startsWith(currentAcc.toLowerCase())) {
+            accumulatedTranscriptRef.current = newSeg;
+          } else {
+            accumulatedTranscriptRef.current = currentAcc ? currentAcc + ' ' + newSeg : newSeg;
+          }
+
+          setTranscript(accumulatedTranscriptRef.current);
           setInterimTranscript('');
 
-          // On desktop, we send immediately because desktop natively waits for silence before emitting isFinal.
-          // On mobile, Android emits isFinal per word/chunk, so we must NOT stop/send here. We wait for onend.
+          // Desktop Chrome waits for silence before emitting final results.
+          // Android emits final per word, so we wait for onend on mobile.
           if (!isMobileRef.current) {
             stopRecognition();
             setVoiceState('thinking');
 
-            onSendMessage(trimmedFinal).catch((err) => {
+            onSendMessage(accumulatedTranscriptRef.current).catch((err) => {
               console.error('[VoiceMode] Failed to send message:', err);
               setVoiceState('error');
-              setErrorMessage('Failed to get answer. Please try speaking again.');
+              setErrorMessage(t('voice', 'statusError') || 'Failed to get answer');
             });
           }
         }
@@ -197,7 +173,7 @@ export function useVoiceMode({
         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
           setVoiceState('error');
           setErrorMessage(
-            'Microphone access was denied. Please allow microphone permission in your browser.'
+            t('voice', 'micPermissionDenied') || 'Microphone denied'
           );
           stopRecognition();
           return;
@@ -238,7 +214,7 @@ export function useVoiceMode({
           onSendMessage(finalMessage).catch((err) => {
             console.error('[VoiceMode] Failed to send message:', err);
             setVoiceState('error');
-            setErrorMessage('Failed to get answer. Please try speaking again.');
+            setErrorMessage(t('voice', 'statusError') || 'Failed to get answer');
           });
           return;
         }
@@ -290,7 +266,7 @@ export function useVoiceMode({
     } else {
       setVoiceState('error');
       setErrorMessage(
-        'Voice recognition is not supported in this browser. You can continue using text chat.'
+        t('voice', 'statusError') || 'Voice recognition not supported'
       );
     }
   }, [startListening]);

@@ -13,7 +13,7 @@ export const MainLayout: React.FC = () => {
   const isChatPage = location.pathname.startsWith('/chat');
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+    <div className={`${isChatPage ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh]'} flex flex-col bg-slate-50 text-slate-900`}>
       {/* Keyboard accessible skip-to-content */}
       <SkipLink targetId="main-content" label="Skip to main content" />
 
@@ -24,7 +24,7 @@ export const MainLayout: React.FC = () => {
       <Header />
 
       {/* Main Body with accessibility landmark */}
-      <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
+      <main id="main-content" tabIndex={-1} className={`flex-1 outline-none flex flex-col min-h-0 ${isChatPage ? "pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0" : ""}`}>
         <Outlet />
       </main>
 

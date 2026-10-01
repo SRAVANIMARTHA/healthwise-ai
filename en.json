@@ -1,6 +1,4 @@
-import { TranslationDictionary } from '../translations';
-
-export const gu: TranslationDictionary = {
+{
   "nav": {
     "home": "Home",
     "chat": "Chat",
@@ -434,4 +432,4 @@ export const gu: TranslationDictionary = {
     "emergencyNotice": "Emergency red-flag advisory detected.",
     "ttsUnavailableNotice": "Voice output is not available for this language on this device."
   }
-};
+}
