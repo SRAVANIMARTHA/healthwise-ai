@@ -1,12 +1,3 @@
-/**
- * HealthWise AI — useVoiceMode Hook (Phase 17)
- *
- * Encapsulates the ChatGPT-style voice interaction loop:
- * IDLE -> LISTENING -> THINKING -> SPEAKING -> LISTENING (continuous loop)
- * Supports real-time interruption (barge-in): speaking -> speech detected/interrupted -> listening.
- * Directly integrates with the existing useChat / useChatStore pipeline.
- */
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { voiceService, VoiceState } from '../services/voice/voice-service';
 import { useTranslation } from './useTranslation';
@@ -42,12 +33,17 @@ export function useVoiceMode({
 
   // References
   const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const silenceTimerRef = useRef<number | null>(null);
+  
   const isListeningRef = useRef(false);
   const lastSpokenMessageIdRef = useRef<string | null>(null);
   const voiceStateRef = useRef<VoiceState>('idle');
   const manualStopRef = useRef(false);
   const accumulatedTranscriptRef = useRef('');
   const isMobileRef = useRef(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+  const useNativeFallbackRef = useRef(false); // Switch to window.SpeechRecognition if server STT lacks API key
 
   // Sync ref
   useEffect(() => {
@@ -56,12 +52,20 @@ export function useVoiceMode({
 
   // Check SpeechRecognition capability on mount
   useEffect(() => {
-    setIsRecognitionAvailable(voiceService.isSpeechRecognitionSupported());
+    setIsRecognitionAvailable(true); // Since we have server fallback, it's always true initially
+  }, []);
+
+  const stopAudioTracks = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.stream) {
+      mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
+    }
   }, []);
 
   // Stop recognition helper
   const stopRecognition = useCallback(() => {
     isListeningRef.current = false;
+    
+    // Stop native recognition
     if (recognitionRef.current) {
       try {
         recognitionRef.current.abort();
@@ -70,6 +74,22 @@ export function useVoiceMode({
       }
       recognitionRef.current = null;
     }
+
+    // Stop MediaRecorder
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch {}
+    }
+    
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+    if (silenceTimerRef.current) {
+      cancelAnimationFrame(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
   }, []);
 
   // Stop speech playback helper
@@ -77,22 +97,14 @@ export function useVoiceMode({
     voiceService.cancelSpeech();
   }, []);
 
-  // Start speech recognition
-  const startListening = useCallback(() => {
-    if (!voiceService.isSpeechRecognitionSupported()) {
+  // Native SpeechRecognition start logic
+  const startNativeRecognition = useCallback(() => {
+    const RecognitionClass = voiceService.getSpeechRecognitionConstructor();
+    if (!RecognitionClass) {
       setVoiceState('error');
-      setErrorMessage(
-        t('voice', 'statusError') || 'Voice recognition not supported'
-      );
+      setErrorMessage(t('voice', 'statusError') || 'Voice recognition not supported');
       return;
     }
-
-    // Cancel any active speech output when listening starts
-    stopSpeech();
-    stopRecognition();
-
-    const RecognitionClass = voiceService.getSpeechRecognitionConstructor();
-    if (!RecognitionClass) return;
 
     try {
       const recognition = new RecognitionClass();
@@ -132,9 +144,6 @@ export function useVoiceMode({
         }
 
         if (finalSegment.trim()) {
-          // If the new finalSegment contains the entirety of our accumulated transcript,
-          // then this is a cumulative update (Android behavior). Overwrite it.
-          // Otherwise, it's a new segment (Desktop behavior). Append it.
           const currentAcc = accumulatedTranscriptRef.current.trim();
           const newSeg = finalSegment.trim();
           
@@ -147,8 +156,6 @@ export function useVoiceMode({
           setTranscript(accumulatedTranscriptRef.current);
           setInterimTranscript('');
 
-          // Desktop Chrome waits for silence before emitting final results.
-          // Android emits final per word, so we wait for onend on mobile.
           if (!isMobileRef.current) {
             stopRecognition();
             setVoiceState('thinking');
@@ -164,32 +171,25 @@ export function useVoiceMode({
 
       recognition.onerror = (event: any) => {
         if (event.error === 'no-speech') {
-          // If no speech is heard, don't crash; just keep listening if still active
-          if (isListeningRef.current && voiceStateRef.current === 'listening') {
-            return;
-          }
+          if (isListeningRef.current && voiceStateRef.current === 'listening') return;
         }
 
         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
           setVoiceState('error');
-          setErrorMessage(
-            t('voice', 'micPermissionDenied') || 'Microphone denied'
-          );
+          setErrorMessage(t('voice', 'micPermissionDenied') || 'Microphone denied');
           stopRecognition();
           return;
         }
 
         if (event.error === 'network') {
+          // Changed: Do not assume network error means no internet. It means Google STT rejected/failed.
           setVoiceState('error');
-          setErrorMessage('Network error during speech recognition. Please check your connection.');
+          setErrorMessage('Speech recognition service is currently unavailable. Please try typing your message.');
           stopRecognition();
           return;
         }
 
-        // Ignore aborted errors from manual stop / restart
-        if (event.error === 'aborted') {
-          return;
-        }
+        if (event.error === 'aborted') return;
 
         console.warn('[VoiceMode] Recognition error:', event.error);
         if (voiceStateRef.current !== 'speaking' && voiceStateRef.current !== 'thinking') {
@@ -199,8 +199,6 @@ export function useVoiceMode({
       };
 
       recognition.onend = () => {
-        // On mobile, the OS mic closes naturally when the user stops speaking.
-        // We use this event to definitively know the user is done, since we accumulated the chunks.
         if (
           isMobileRef.current &&
           voiceStateRef.current === 'listening' &&
@@ -219,7 +217,6 @@ export function useVoiceMode({
           return;
         }
 
-        // If ended unexpectedly while we intended to keep listening, restart
         if (
           isListeningRef.current &&
           !manualStopRef.current &&
@@ -227,28 +224,178 @@ export function useVoiceMode({
         ) {
           try {
             recognition.start();
-          } catch {
-            // Already active or error
-          }
+          } catch {}
         }
       };
 
       recognitionRef.current = recognition;
       recognition.start();
     } catch (err: any) {
-      console.error('[VoiceMode] Error starting recognition:', err);
+      console.error('[VoiceMode] Error starting native recognition:', err);
       setVoiceState('error');
       setErrorMessage(err.message || 'Unable to access microphone.');
     }
-  }, [language, onSendMessage, stopRecognition, stopSpeech]);
+  }, [language, onSendMessage, stopRecognition, stopSpeech, t]);
+
+  // Start MediaRecorder (Server STT)
+  const startListening = useCallback(async () => {
+    stopSpeech();
+    stopRecognition();
+
+    if (useNativeFallbackRef.current) {
+      startNativeRecognition();
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      const audioChunks: Blob[] = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        if (!isListeningRef.current && !accumulatedTranscriptRef.current) return;
+        
+        isListeningRef.current = false;
+        stopAudioTracks();
+
+        if (audioChunks.length === 0) return;
+
+        setVoiceState('thinking');
+        
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const reader = new FileReader();
+        
+        reader.onloadend = async () => {
+          const base64 = (reader.result as string).split(',')[1];
+          try {
+            const response = await fetch('/api/stt', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ audioBase64: base64, language })
+            });
+
+            const contentType = response.headers.get('content-type');
+
+            if (response.status === 404 || response.status === 501 || (contentType && contentType.includes('text/html'))) {
+              // Server lacks API key or endpoint is missing (e.g. Vite dev server), fallback to native SpeechRecognition
+              useNativeFallbackRef.current = true;
+              console.warn('[VoiceMode] Server STT not configured or missing, falling back to browser-native SpeechRecognition');
+              
+              // Start native immediately to not drop user experience
+              startNativeRecognition();
+              return;
+            }
+
+            if (!response.ok) {
+              throw new Error('STT API failed');
+            }
+
+            const data = await response.json();
+            const finalTranscript = data.transcript?.trim();
+            
+            if (finalTranscript) {
+              setTranscript(finalTranscript);
+              accumulatedTranscriptRef.current = finalTranscript;
+              
+              onSendMessage(finalTranscript).catch((err) => {
+                console.error('[VoiceMode] Failed to send message:', err);
+                setVoiceState('error');
+                setErrorMessage(t('voice', 'statusError') || 'Failed to get answer');
+              });
+            } else {
+              setVoiceState('idle'); // No transcript, just go idle
+            }
+          } catch (err) {
+            console.error('[VoiceMode] STT processing error:', err);
+            setVoiceState('error');
+            setErrorMessage('Network error during secure speech transcription.');
+          }
+        };
+        reader.readAsDataURL(audioBlob);
+      };
+
+      // Silence detection to auto-stop recording
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        const audioContext = new AudioContextClass();
+        audioContextRef.current = audioContext;
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 512;
+        source.connect(analyser);
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        let silenceStart = Date.now();
+        let isSpeaking = false;
+
+        const checkSilence = () => {
+          if (mediaRecorder.state !== 'recording') return;
+          
+          analyser.getByteFrequencyData(dataArray);
+          const sum = dataArray.reduce((a, b) => a + b, 0);
+          const average = sum / bufferLength;
+
+          // Simple amplitude threshold
+          if (average > 10) {
+            isSpeaking = true;
+            silenceStart = Date.now();
+            if (voiceStateRef.current !== 'listening') {
+              setVoiceState('listening');
+            }
+          } else {
+            if (isSpeaking && Date.now() - silenceStart > 1800) {
+              // 1.8 seconds of silence -> stop recording and process
+              mediaRecorder.stop();
+              return;
+            }
+          }
+          silenceTimerRef.current = requestAnimationFrame(checkSilence);
+        };
+        
+        silenceTimerRef.current = requestAnimationFrame(checkSilence);
+      } else {
+        // No AudioContext support, rely purely on manual stop via onInterrupt/onClose
+      }
+
+      mediaRecorder.start();
+      isListeningRef.current = true;
+      // Show an interim indication so the user knows it's actively recording audio
+      setInterimTranscript('Listening securely...');
+      setVoiceState('listening');
+      setErrorMessage(null);
+
+    } catch (err: any) {
+      console.error('[VoiceMode] Microphone error:', err);
+      // Fallback to native immediately if user denies MediaRecorder but perhaps allowed SpeechRec
+      useNativeFallbackRef.current = true;
+      startNativeRecognition();
+    }
+  }, [language, onSendMessage, startNativeRecognition, stopRecognition, stopSpeech, stopAudioTracks, t]);
 
   // Handle Interruption / Barge-in button or speech trigger
   const handleInterrupt = useCallback(() => {
     stopSpeech();
-    setVoiceState('interrupted');
-    setTimeout(() => {
-      startListening();
-    }, 100);
+    
+    // If we were recording and user clicked pause, stop it immediately and process it
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+      return;
+    }
+    
+    // For native recognition, restart it
+    if (useNativeFallbackRef.current) {
+      setVoiceState('interrupted');
+      setTimeout(() => {
+        startListening();
+      }, 100);
+    }
   }, [stopSpeech, startListening]);
 
   // Open Voice Mode
@@ -260,15 +407,7 @@ export function useVoiceMode({
     setSpokenResponse('');
     setErrorMessage(null);
 
-    // Initial state
-    if (voiceService.isSpeechRecognitionSupported()) {
-      startListening();
-    } else {
-      setVoiceState('error');
-      setErrorMessage(
-        t('voice', 'statusError') || 'Voice recognition not supported'
-      );
-    }
+    startListening();
   }, [startListening]);
 
   // Close Voice Mode
@@ -276,15 +415,15 @@ export function useVoiceMode({
     manualStopRef.current = true;
     stopSpeech();
     stopRecognition();
+    stopAudioTracks();
     setVoiceState('ended');
     setIsOpen(false);
-  }, [stopSpeech, stopRecognition]);
+  }, [stopSpeech, stopRecognition, stopAudioTracks]);
 
   // Monitor AI Response to trigger Speech Synthesis
   useEffect(() => {
     if (!isOpen) return;
 
-    // While searching / typing in chatStore, ensure state is 'thinking'
     if (isSearching || isTyping) {
       if (voiceState !== 'thinking') {
         setVoiceState('thinking');
@@ -292,7 +431,6 @@ export function useVoiceMode({
       return;
     }
 
-    // Check if the latest message is from assistant and hasn't been spoken yet
     if (messages.length > 0) {
       const lastMsg = messages[messages.length - 1];
       if (
@@ -304,19 +442,16 @@ export function useVoiceMode({
         setSpokenResponse(lastMsg.content);
         setVoiceState('speaking');
 
-        // Speak the text aloud
         voiceService.speakText(lastMsg.content, language, {
           onStart: () => {
             setVoiceState('speaking');
           },
           onEnd: () => {
-            // Once speech completes naturally, return to listening for continuous conversation
             setVoiceState('listening');
             startListening();
           },
           onError: (err) => {
             console.warn('[VoiceMode] TTS error callback:', err);
-            // Fallback to listening even if TTS encounters voice error
             setVoiceState('listening');
             startListening();
           },
@@ -330,15 +465,10 @@ export function useVoiceMode({
     return () => {
       manualStopRef.current = true;
       voiceService.cancelSpeech();
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.abort();
-        } catch {
-          // safe ignore
-        }
-      }
+      stopRecognition();
+      stopAudioTracks();
     };
-  }, []);
+  }, [stopRecognition, stopAudioTracks]);
 
   return {
     isOpen,
